@@ -1,0 +1,132 @@
+<pnml>
+<net id="ComposedModel" type="P/T net"><page id="page0">
+<place id="Controller" >
+<name><text>Controller</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P1" >
+<name><text>P1</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P2" >
+<name><text>P2</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P3" >
+<name><text>P3</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P4" >
+<name><text>P4</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P5" >
+<name><text>P5</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P4_initial" >
+<name><text>P4_initial</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P4_final" >
+<name><text>P4_final</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P1_visited" >
+<name><text>P1_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P2_visited" >
+<name><text>P2_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P3_visited" >
+<name><text>P3_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P4_visited" >
+<name><text>P4_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P5_visited" >
+<name><text>P5_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<transition id="T1_2">
+<player><value>0</value></player><name><text>T1_2</text></name></transition>
+<transition id="T5_4">
+<player><value>0</value></player><name><text>T5_4</text></name></transition>
+<transition id="T4_2">
+<player><value>0</value></player><name><text>T4_2</text></name></transition>
+<transition id="T2_3">
+<player><value>0</value></player><name><text>T2_3</text></name></transition>
+<transition id="T4_1">
+<player><value>0</value></player><name><text>T4_1</text></name></transition>
+<transition id="Inject_packet">
+<player><value>1</value></player><name><text>Inject_packet</text></name></transition>
+<transition id="Update_P4">
+<player><value>0</value></player><name><text>Update_P4</text></name></transition>
+<arc id="P1_T1_2" source="P1" target="T1_2" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P5_T5_4" source="P5" target="T5_4" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P4_T4_2" source="P4" target="T4_2" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P2_T2_3" source="P2" target="T2_3" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P4_T4_1" source="P4" target="T4_1" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Inject_packet" source="Controller" target="Inject_packet" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Update_P4" source="Controller" target="Update_P4" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P4_initial_Update_P4" source="P4_initial" target="Update_P4" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P4_initial_T4_1" source="P4_initial" target="T4_1" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P4_final_T4_2" source="P4_final" target="T4_2" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T1_2_P2" source="T1_2" target="P2" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_4_P4" source="T5_4" target="P4" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_2_P2" source="T4_2" target="P2" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T2_3_P3" source="T2_3" target="P3" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_1_P1" source="T4_1" target="P1" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P5" source="Inject_packet" target="P5" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P5_visited" source="Inject_packet" target="P5_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P4_Controller" source="Update_P4" target="Controller" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P4_P4_final" source="Update_P4" target="P4_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_1_P4_initial" source="T4_1" target="P4_initial" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_2_P4_final" source="T4_2" target="P4_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_1_P1_visited" source="T4_1" target="P1_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T1_2_P2_visited" source="T1_2" target="P2_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_2_P2_visited" source="T4_2" target="P2_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T2_3_P3_visited" source="T2_3" target="P3_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_4_P4_visited" source="T5_4" target="P4_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P1_visited_T1_2" source="P1_visited" target="T1_2" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P2_visited_T2_3" source="P2_visited" target="T2_3" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P4_visited_T4_1" source="P4_visited" target="T4_1" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P4_visited_T4_2" source="P4_visited" target="T4_2" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P5_visited_T5_4" source="P5_visited" target="T5_4" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+</page></net>
+</pnml>

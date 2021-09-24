@@ -1,0 +1,76 @@
+{
+    "Initial_routing": [
+        [
+            8,
+            9
+        ],
+        [
+            9,
+            21
+        ],
+        [
+            21,
+            32
+        ],
+        [
+            32,
+            23
+        ],
+        [
+            23,
+            16
+        ],
+        [
+            16,
+            13
+        ],
+        [
+            13,
+            14
+        ]
+    ],
+    "Final_routing": [
+        [
+            8,
+            5
+        ],
+        [
+            5,
+            4
+        ],
+        [
+            4,
+            32
+        ],
+        [
+            32,
+            35
+        ],
+        [
+            35,
+            27
+        ],
+        [
+            27,
+            15
+        ],
+        [
+            15,
+            14
+        ]
+    ],
+    "Properties": {
+        "Waypoint": {
+            "startNode": 8,
+            "finalNode": 14,
+            "waypoint": 32
+        },
+        "LoopFreedom": {
+            "startNode": 8
+        },
+        "Reachability": {
+            "startNode": 8,
+            "finalNode": 14
+        }
+    }
+}

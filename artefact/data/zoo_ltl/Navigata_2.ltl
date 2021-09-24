@@ -1,0 +1,109 @@
+switch 2 (in2s,out2s,out2s_2) [] {
+ rule in2s => out2s []
+ }
+ final {
+ rule in2s => out2s_2 []
+ }
+switch 4 (in4s,out4s,out4s_2) [] {
+ rule in4s => out4s []
+ }
+ final {
+ rule in4s => out4s_2 []
+ }
+switch 10 (in10s,out10s) [] {
+ rule in10s => out10s []
+ }
+ final {
+     
+ }
+switch 8 (in8s,out8s) [] {
+ rule in8s => out8s []
+ }
+ final {
+     
+ }
+switch 11 (in11s,out11s,out11s_2) [] {
+ rule in11s => out11s []
+ }
+ final {
+ rule in11s => out11s_2 []
+ }
+switch 5 (in5s,out5s,out5s_2) [] {
+ rule in5s => out5s []
+ }
+ final {
+ rule in5s => out5s_2 []
+ }
+switch 3 (in3s,out3s,out3s_2) [] {
+ rule in3s => out3s []
+ }
+ final {
+ rule in3s => out3s_2 []
+ }
+switch 14 (in14s,out14s,out14s_2) [] {
+ rule in14s => out14s []
+ }
+ final {
+ rule in14s => out14s_2 []
+ }
+switch 16 (in16s,out16s,out16s_2) [] {
+ rule in16s => out16s []
+ }
+ final {
+ rule in16s => out16s_2 []
+ }
+switch 22 (in22s,out22s) [] {
+ rule in22s => out22s []
+ }
+ final {
+     
+ }
+switch 20 (in20s,out20s) [] {
+ rule in20s => out20s []
+ }
+ final {
+     
+ }
+switch 23 (in23s,out23s,out23s_2) [] {
+ rule in23s => out23s []
+ }
+ final {
+ rule in23s => out23s_2 []
+ }
+switch 17 (in17s,out17s,out17s_2) [] {
+ rule in17s => out17s []
+ }
+ final {
+ rule in17s => out17s_2 []
+ }
+switch 15 (in15s,out15s) [] {
+ rule in15s => out15s []
+ }
+ final {
+ rule in15s => out15s []
+ }
+link  => in2s []
+link out2s => in4s []
+link out2s_2 => in4s []
+link out4s => in10s []
+link out4s_2 => in11s []
+link out10s => in8s []
+link out8s => in11s []
+link out11s => in5s []
+link out11s_2 => in5s []
+link out5s => in3s []
+link out5s_2 => in3s []
+link out3s => in14s []
+link out3s_2 => in14s []
+link out14s => in16s []
+link out14s_2 => in16s []
+link out16s => in22s []
+link out16s_2 => in23s []
+link out22s => in20s []
+link out20s => in23s []
+link out23s => in17s []
+link out23s_2 => in17s []
+link out17s => in15s []
+link out17s_2 => in15s []
+spec
+port=in2s -> (!(port=out15s) U ((port=in3s) & (TRUE U (port=out15s))))

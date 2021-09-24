@@ -1,0 +1,510 @@
+<pnml>
+<net id="ComposedModel" type="P/T net"><page id="page0">
+<place id="Controller" >
+<name><text>Controller</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P72" >
+<name><text>P72</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P9" >
+<name><text>P9</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P74" >
+<name><text>P74</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P11" >
+<name><text>P11</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P76" >
+<name><text>P76</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P13" >
+<name><text>P13</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P78" >
+<name><text>P78</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P15" >
+<name><text>P15</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P83" >
+<name><text>P83</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P20" >
+<name><text>P20</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P30" >
+<name><text>P30</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P32" >
+<name><text>P32</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P34" >
+<name><text>P34</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P36" >
+<name><text>P36</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P41" >
+<name><text>P41</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P51" >
+<name><text>P51</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P53" >
+<name><text>P53</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P55" >
+<name><text>P55</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P57" >
+<name><text>P57</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P62" >
+<name><text>P62</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P72_initial" >
+<name><text>P72_initial</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P72_final" >
+<name><text>P72_final</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P9_initial" >
+<name><text>P9_initial</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P9_final" >
+<name><text>P9_final</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P30_initial" >
+<name><text>P30_initial</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P30_final" >
+<name><text>P30_final</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P51_initial" >
+<name><text>P51_initial</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P51_final" >
+<name><text>P51_final</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P72_visited" >
+<name><text>P72_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P9_visited" >
+<name><text>P9_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P74_visited" >
+<name><text>P74_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P11_visited" >
+<name><text>P11_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P76_visited" >
+<name><text>P76_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P13_visited" >
+<name><text>P13_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P78_visited" >
+<name><text>P78_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P15_visited" >
+<name><text>P15_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P83_visited" >
+<name><text>P83_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P20_visited" >
+<name><text>P20_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P30_visited" >
+<name><text>P30_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P32_visited" >
+<name><text>P32_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P34_visited" >
+<name><text>P34_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P36_visited" >
+<name><text>P36_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P41_visited" >
+<name><text>P41_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P51_visited" >
+<name><text>P51_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P53_visited" >
+<name><text>P53_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P55_visited" >
+<name><text>P55_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P57_visited" >
+<name><text>P57_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P62_visited" >
+<name><text>P62_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<transition id="T20_11">
+<player><value>0</value></player><name><text>T20_11</text></name></transition>
+<transition id="T32_55">
+<player><value>0</value></player><name><text>T32_55</text></name></transition>
+<transition id="T78_83">
+<player><value>0</value></player><name><text>T78_83</text></name></transition>
+<transition id="T51_62">
+<player><value>0</value></player><name><text>T51_62</text></name></transition>
+<transition id="T9_20">
+<player><value>0</value></player><name><text>T9_20</text></name></transition>
+<transition id="T62_53">
+<player><value>0</value></player><name><text>T62_53</text></name></transition>
+<transition id="T30_36">
+<player><value>0</value></player><name><text>T30_36</text></name></transition>
+<transition id="T15_20">
+<player><value>0</value></player><name><text>T15_20</text></name></transition>
+<transition id="T72_78">
+<player><value>0</value></player><name><text>T72_78</text></name></transition>
+<transition id="T34_30">
+<player><value>0</value></player><name><text>T34_30</text></name></transition>
+<transition id="T76_72">
+<player><value>0</value></player><name><text>T76_72</text></name></transition>
+<transition id="T57_62">
+<player><value>0</value></player><name><text>T57_62</text></name></transition>
+<transition id="T41_32">
+<player><value>0</value></player><name><text>T41_32</text></name></transition>
+<transition id="T11_34">
+<player><value>0</value></player><name><text>T11_34</text></name></transition>
+<transition id="T30_41">
+<player><value>0</value></player><name><text>T30_41</text></name></transition>
+<transition id="T53_76">
+<player><value>0</value></player><name><text>T53_76</text></name></transition>
+<transition id="T72_83">
+<player><value>0</value></player><name><text>T72_83</text></name></transition>
+<transition id="T51_57">
+<player><value>0</value></player><name><text>T51_57</text></name></transition>
+<transition id="T83_74">
+<player><value>0</value></player><name><text>T83_74</text></name></transition>
+<transition id="T9_15">
+<player><value>0</value></player><name><text>T9_15</text></name></transition>
+<transition id="T13_9">
+<player><value>0</value></player><name><text>T13_9</text></name></transition>
+<transition id="T55_51">
+<player><value>0</value></player><name><text>T55_51</text></name></transition>
+<transition id="T36_41">
+<player><value>0</value></player><name><text>T36_41</text></name></transition>
+<transition id="Inject_packet">
+<player><value>1</value></player><name><text>Inject_packet</text></name></transition>
+<transition id="Update_P72">
+<player><value>0</value></player><name><text>Update_P72</text></name></transition>
+<transition id="Update_P9">
+<player><value>0</value></player><name><text>Update_P9</text></name></transition>
+<transition id="Update_P30">
+<player><value>0</value></player><name><text>Update_P30</text></name></transition>
+<transition id="Update_P51">
+<player><value>0</value></player><name><text>Update_P51</text></name></transition>
+<arc id="P20_T20_11" source="P20" target="T20_11" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P32_T32_55" source="P32" target="T32_55" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P78_T78_83" source="P78" target="T78_83" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P51_T51_62" source="P51" target="T51_62" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P9_T9_20" source="P9" target="T9_20" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P62_T62_53" source="P62" target="T62_53" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P30_T30_36" source="P30" target="T30_36" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P15_T15_20" source="P15" target="T15_20" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P72_T72_78" source="P72" target="T72_78" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P34_T34_30" source="P34" target="T34_30" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P76_T76_72" source="P76" target="T76_72" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P57_T57_62" source="P57" target="T57_62" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P41_T41_32" source="P41" target="T41_32" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P11_T11_34" source="P11" target="T11_34" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P30_T30_41" source="P30" target="T30_41" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P53_T53_76" source="P53" target="T53_76" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P72_T72_83" source="P72" target="T72_83" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P51_T51_57" source="P51" target="T51_57" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P83_T83_74" source="P83" target="T83_74" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P9_T9_15" source="P9" target="T9_15" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P13_T13_9" source="P13" target="T13_9" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P55_T55_51" source="P55" target="T55_51" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P36_T36_41" source="P36" target="T36_41" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Inject_packet" source="Controller" target="Inject_packet" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Update_P72" source="Controller" target="Update_P72" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P72_initial_Update_P72" source="P72_initial" target="Update_P72" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P72_initial_T72_78" source="P72_initial" target="T72_78" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P72_final_T72_83" source="P72_final" target="T72_83" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Update_P9" source="Controller" target="Update_P9" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P9_initial_Update_P9" source="P9_initial" target="Update_P9" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P9_initial_T9_15" source="P9_initial" target="T9_15" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P9_final_T9_20" source="P9_final" target="T9_20" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Update_P30" source="Controller" target="Update_P30" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P30_initial_Update_P30" source="P30_initial" target="Update_P30" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P30_initial_T30_36" source="P30_initial" target="T30_36" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P30_final_T30_41" source="P30_final" target="T30_41" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Update_P51" source="Controller" target="Update_P51" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P51_initial_Update_P51" source="P51_initial" target="Update_P51" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P51_initial_T51_57" source="P51_initial" target="T51_57" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P51_final_T51_62" source="P51_final" target="T51_62" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T20_11_P11" source="T20_11" target="P11" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T32_55_P55" source="T32_55" target="P55" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T78_83_P83" source="T78_83" target="P83" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T51_62_P62" source="T51_62" target="P62" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T9_20_P20" source="T9_20" target="P20" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T62_53_P53" source="T62_53" target="P53" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T30_36_P36" source="T30_36" target="P36" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T15_20_P20" source="T15_20" target="P20" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T72_78_P78" source="T72_78" target="P78" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T34_30_P30" source="T34_30" target="P30" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T76_72_P72" source="T76_72" target="P72" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T57_62_P62" source="T57_62" target="P62" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T41_32_P32" source="T41_32" target="P32" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T11_34_P34" source="T11_34" target="P34" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T30_41_P41" source="T30_41" target="P41" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T53_76_P76" source="T53_76" target="P76" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T72_83_P83" source="T72_83" target="P83" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T51_57_P57" source="T51_57" target="P57" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T83_74_P74" source="T83_74" target="P74" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T9_15_P15" source="T9_15" target="P15" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T13_9_P9" source="T13_9" target="P9" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T55_51_P51" source="T55_51" target="P51" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T36_41_P41" source="T36_41" target="P41" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P13" source="Inject_packet" target="P13" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P13_visited" source="Inject_packet" target="P13_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P72_Controller" source="Update_P72" target="Controller" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P72_P72_final" source="Update_P72" target="P72_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T72_78_P72_initial" source="T72_78" target="P72_initial" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T72_83_P72_final" source="T72_83" target="P72_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P9_Controller" source="Update_P9" target="Controller" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P9_P9_final" source="Update_P9" target="P9_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T9_15_P9_initial" source="T9_15" target="P9_initial" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T9_20_P9_final" source="T9_20" target="P9_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P30_Controller" source="Update_P30" target="Controller" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P30_P30_final" source="Update_P30" target="P30_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T30_36_P30_initial" source="T30_36" target="P30_initial" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T30_41_P30_final" source="T30_41" target="P30_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P51_Controller" source="Update_P51" target="Controller" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P51_P51_final" source="Update_P51" target="P51_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T51_57_P51_initial" source="T51_57" target="P51_initial" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T51_62_P51_final" source="T51_62" target="P51_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T76_72_P72_visited" source="T76_72" target="P72_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T13_9_P9_visited" source="T13_9" target="P9_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T83_74_P74_visited" source="T83_74" target="P74_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T20_11_P11_visited" source="T20_11" target="P11_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T53_76_P76_visited" source="T53_76" target="P76_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T72_78_P78_visited" source="T72_78" target="P78_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T9_15_P15_visited" source="T9_15" target="P15_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T78_83_P83_visited" source="T78_83" target="P83_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T72_83_P83_visited" source="T72_83" target="P83_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T9_20_P20_visited" source="T9_20" target="P20_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T15_20_P20_visited" source="T15_20" target="P20_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T34_30_P30_visited" source="T34_30" target="P30_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T41_32_P32_visited" source="T41_32" target="P32_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T11_34_P34_visited" source="T11_34" target="P34_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T30_36_P36_visited" source="T30_36" target="P36_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T30_41_P41_visited" source="T30_41" target="P41_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T36_41_P41_visited" source="T36_41" target="P41_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T55_51_P51_visited" source="T55_51" target="P51_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T62_53_P53_visited" source="T62_53" target="P53_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T32_55_P55_visited" source="T32_55" target="P55_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T51_57_P57_visited" source="T51_57" target="P57_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T51_62_P62_visited" source="T51_62" target="P62_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T57_62_P62_visited" source="T57_62" target="P62_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P72_visited_T72_78" source="P72_visited" target="T72_78" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P72_visited_T72_83" source="P72_visited" target="T72_83" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P9_visited_T9_15" source="P9_visited" target="T9_15" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P9_visited_T9_20" source="P9_visited" target="T9_20" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P11_visited_T11_34" source="P11_visited" target="T11_34" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P76_visited_T76_72" source="P76_visited" target="T76_72" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P13_visited_T13_9" source="P13_visited" target="T13_9" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P78_visited_T78_83" source="P78_visited" target="T78_83" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P15_visited_T15_20" source="P15_visited" target="T15_20" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P83_visited_T83_74" source="P83_visited" target="T83_74" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P20_visited_T20_11" source="P20_visited" target="T20_11" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P30_visited_T30_36" source="P30_visited" target="T30_36" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P30_visited_T30_41" source="P30_visited" target="T30_41" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P32_visited_T32_55" source="P32_visited" target="T32_55" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P34_visited_T34_30" source="P34_visited" target="T34_30" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P36_visited_T36_41" source="P36_visited" target="T36_41" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P41_visited_T41_32" source="P41_visited" target="T41_32" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P51_visited_T51_57" source="P51_visited" target="T51_57" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P51_visited_T51_62" source="P51_visited" target="T51_62" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P53_visited_T53_76" source="P53_visited" target="T53_76" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P55_visited_T55_51" source="P55_visited" target="T55_51" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P57_visited_T57_62" source="P57_visited" target="T57_62" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P62_visited_T62_53" source="P62_visited" target="T62_53" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+</page></net>
+</pnml>

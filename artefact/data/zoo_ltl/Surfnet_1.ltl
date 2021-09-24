@@ -1,0 +1,148 @@
+switch 41 (in41s,out41s,out41s_2) [] {
+ rule in41s => out41s []
+ }
+ final {
+ rule in41s => out41s_2 []
+ }
+switch 40 (in40s,out40s) [] {
+ rule in40s => out40s []
+ }
+ final {
+     
+ }
+switch 49 (in49s,out49s) [] {
+ rule in49s => out49s []
+ }
+ final {
+     
+ }
+switch 48 (in48s,out48s) [] {
+ rule in48s => out48s []
+ }
+ final {
+     
+ }
+switch 47 (in47s,out47s) [] {
+ rule in47s => out47s []
+ }
+ final {
+     
+ }
+switch 8 (in8s,out8s,out8s_2) [] {
+ rule in8s => out8s []
+ }
+ final {
+ rule in8s => out8s_2 []
+ }
+switch 30 (in30s,out30s) [] {
+ rule in30s => out30s []
+ }
+ final {
+     
+ }
+switch 22 (in22s,out22s) [] {
+ rule in22s => out22s []
+ }
+ final {
+     
+ }
+switch 37 (in37s,out37s,out37s_2) [] {
+ rule in37s => out37s []
+ }
+ final {
+ rule in37s => out37s_2 []
+ }
+switch 25 (in25s,out25s,out25s_2) [] {
+ rule in25s => out25s []
+ }
+ final {
+ rule in25s => out25s_2 []
+ }
+switch 27 (in27s,out27s,out27s_2) [] {
+ rule in27s => out27s []
+ }
+ final {
+ rule in27s => out27s_2 []
+ }
+switch 26 (in26s,out26s,out26s_2) [] {
+ rule in26s => out26s []
+ }
+ final {
+ rule in26s => out26s_2 []
+ }
+switch 20 (in20s,out20s) [] {
+ rule in20s => out20s []
+ }
+ final {
+     
+ }
+switch 21 (in21s,out21s) [] {
+ rule in21s => out21s []
+ }
+ final {
+     
+ }
+switch 2 (in2s,out2s_2) [] {
+
+ }
+ final {
+ rule in2s => out2s_2 []
+ }
+switch 3 (in3s,out3s_2) [] {
+
+ }
+ final {
+ rule in3s => out3s_2 []
+ }
+switch 1 (in1s,out1s_2) [] {
+
+ }
+ final {
+ rule in1s => out1s_2 []
+ }
+switch 38 (in38s,out38s_2) [] {
+
+ }
+ final {
+ rule in38s => out38s_2 []
+ }
+switch 29 (in29s,out29s_2) [] {
+
+ }
+ final {
+ rule in29s => out29s_2 []
+ }
+switch 28 (in28s,out28s) [] {
+ rule in28s => out28s []
+ }
+ final {
+ rule in28s => out28s []
+ }
+link  => in41s []
+link out41s => in40s []
+link out41s_2 => in2s []
+link out40s => in49s []
+link out49s => in48s []
+link out48s => in47s []
+link out47s => in8s []
+link out8s => in30s []
+link out8s_2 => in38s []
+link out30s => in22s []
+link out22s => in37s []
+link out37s => in25s []
+link out37s_2 => in25s []
+link out25s => in27s []
+link out25s_2 => in27s []
+link out27s => in26s []
+link out27s_2 => in26s []
+link out26s => in20s []
+link out26s_2 => in29s []
+link out20s => in21s []
+link out21s => in28s []
+link out2s_2 => in3s []
+link out3s_2 => in1s []
+link out1s_2 => in8s []
+link out38s_2 => in37s []
+link out29s_2 => in28s []
+spec
+port=in41s -> (!(port=out28s) U ((port=in37s) & (TRUE U (port=out28s))))

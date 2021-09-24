@@ -1,0 +1,54 @@
+switch 6 (in6s,out6s,out6s_2) [] {
+ rule in6s => out6s []
+ }
+ final {
+ rule in6s => out6s_2 []
+ }
+switch 5 (in5s,out5s,out5s_2) [] {
+ rule in5s => out5s []
+ }
+ final {
+ rule in5s => out5s_2 []
+ }
+switch 15 (in15s,out15s) [] {
+ rule in15s => out15s []
+ }
+ final {
+     
+ }
+switch 12 (in12s,out12s) [] {
+ rule in12s => out12s []
+ }
+ final {
+     
+ }
+switch 14 (in14s,out14s,out14s_2) [] {
+ rule in14s => out14s []
+ }
+ final {
+ rule in14s => out14s_2 []
+ }
+switch 9 (in9s,out9s_2) [] {
+
+ }
+ final {
+ rule in9s => out9s_2 []
+ }
+switch 13 (in13s,out13s) [] {
+ rule in13s => out13s []
+ }
+ final {
+ rule in13s => out13s []
+ }
+link  => in6s []
+link out6s => in5s []
+link out6s_2 => in5s []
+link out5s => in15s []
+link out5s_2 => in9s []
+link out15s => in12s []
+link out12s => in14s []
+link out14s => in13s []
+link out14s_2 => in13s []
+link out9s_2 => in14s []
+spec
+port=in6s -> (!(port=out13s) U ((port=in5s) & (TRUE U (port=out13s))))

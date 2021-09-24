@@ -1,0 +1,1 @@
+AG ((!(deadlock) or P0_visited >= 1) and (P16_visited >= 1 or P0_visited = 0))

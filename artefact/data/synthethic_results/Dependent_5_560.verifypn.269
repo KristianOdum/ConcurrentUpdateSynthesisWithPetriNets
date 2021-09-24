@@ -1,0 +1,27 @@
+
+Parameters: -p -r 0 -q 0 --strategy-output /dev/null data/synthethic_pn/Dependent_5_560.pnml data/synthethic_pn/Dependent_5_560.q 
+
+Search=OverApprox,Trace=DISABLED,State_Space_Exploration=DISABLED,Structural_Reduction=DISABLED,Struct_Red_Timout=60,Stubborn_Reduction=DISABLED,Query_Simplication=DISABLED,Siphon_Trap=DISABLED,LPSolve_Timeout=10,CTLAlgorithm=CZERO
+Finished parsing model
+Skipping linear-programming (-q 0)
+Query size reduced from 785 to 785 nodes ( 0 percent reduction).
+
+Using DFS instead of BestFS for synthesis
+
+FORMULA  TRUE TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT EXPLICIT STATE_COMPRESSION 
+Query index 0 was solved
+
+Query is satisfied.
+
+
+STATS:
+	Time (seconds)    : 22.52
+	Configurations    : 623328
+	Markings          : 623328
+	Edges             : 623364
+	Processed Edges   : 395921
+	Processed N. Edges: 0
+	Explored Configs  : 395922
+
+@@@M337920@@@
+@@@T69036@@@

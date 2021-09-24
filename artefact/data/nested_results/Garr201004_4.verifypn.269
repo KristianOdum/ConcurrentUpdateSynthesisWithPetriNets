@@ -1,0 +1,27 @@
+
+Parameters: -q 0 -r 0 -p --strategy-output /dev/null data/nested_pn/Garr201004_4.pnml data/nested_pn/Garr201004_4.q 
+
+Search=OverApprox,Trace=DISABLED,State_Space_Exploration=DISABLED,Structural_Reduction=DISABLED,Struct_Red_Timout=60,Stubborn_Reduction=DISABLED,Query_Simplication=DISABLED,Siphon_Trap=DISABLED,LPSolve_Timeout=10,CTLAlgorithm=CZERO
+Finished parsing model
+Skipping linear-programming (-q 0)
+Query size reduced from 15 to 15 nodes ( 0 percent reduction).
+
+Using DFS instead of BestFS for synthesis
+
+FORMULA  TRUE TECHNIQUES COLLATERAL_PROCESSING STRUCTURAL_REDUCTION QUERY_REDUCTION SAT_SMT EXPLICIT STATE_COMPRESSION 
+Query index 0 was solved
+
+Query is satisfied.
+
+
+STATS:
+	Time (seconds)    : 0.08787
+	Configurations    : 6159
+	Markings          : 6159
+	Edges             : 6158
+	Processed Edges   : 5882
+	Processed N. Edges: 0
+	Explored Configs  : 5883
+
+@@@M8244@@@
+@@@T344@@@

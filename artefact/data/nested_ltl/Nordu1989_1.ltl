@@ -1,0 +1,90 @@
+switch 170 (in170s,out170s,out170s_2) [] {
+ rule in170s => out170s []
+ }
+ final {
+ rule in170s => out170s_2 []
+ }
+switch 175 (in175s,out175s,out175s_2) [] {
+ rule in175s => out175s []
+ }
+ final {
+ rule in175s => out175s_2 []
+ }
+switch 176 (in176s,out176s,out176s_2) [] {
+ rule in176s => out176s []
+ }
+ final {
+ rule in176s => out176s_2 []
+ }
+switch 165 (in165s,out165s) [] {
+ rule in165s => out165s []
+ }
+ final {
+     
+ }
+switch 205 (in205s,out205s) [] {
+ rule in205s => out205s []
+ }
+ final {
+     
+ }
+switch 188 (in188s,out188s) [] {
+ rule in188s => out188s []
+ }
+ final {
+     
+ }
+switch 169 (in169s,out169s,out169s_2) [] {
+ rule in169s => out169s []
+ }
+ final {
+ rule in169s => out169s_2 []
+ }
+switch 173 (in173s,out173s_2) [] {
+
+ }
+ final {
+ rule in173s => out173s_2 []
+ }
+switch 199 (in199s,out199s_2) [] {
+
+ }
+ final {
+ rule in199s => out199s_2 []
+ }
+switch 181 (in181s,out181s_2) [] {
+
+ }
+ final {
+ rule in181s => out181s_2 []
+ }
+switch 186 (in186s,out186s_2) [] {
+
+ }
+ final {
+ rule in186s => out186s_2 []
+ }
+switch 203 (in203s,out203s) [] {
+ rule in203s => out203s []
+ }
+ final {
+ rule in203s => out203s []
+ }
+link  => in170s []
+link out170s => in175s []
+link out170s_2 => in175s []
+link out175s => in176s []
+link out175s_2 => in176s []
+link out176s => in165s []
+link out176s_2 => in173s []
+link out165s => in205s []
+link out205s => in188s []
+link out188s => in169s []
+link out169s => in203s []
+link out169s_2 => in203s []
+link out173s_2 => in199s []
+link out199s_2 => in181s []
+link out181s_2 => in186s []
+link out186s_2 => in169s []
+spec
+port=in170s -> (!(port=out203s) U ((port=in176s) & (TRUE U (port=out203s))))

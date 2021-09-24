@@ -1,0 +1,56 @@
+switch 9 (in9s,out9s,out9s_2) [] {
+ rule in9s => out9s []
+ }
+ final {
+ rule in9s => out9s_2 []
+ }
+switch 15 (in15s,out15s,out15s_2) [] {
+ rule in15s => out15s []
+ }
+ final {
+ rule in15s => out15s_2 []
+ }
+switch 13 (in13s,out13s,out13s_2) [] {
+ rule in13s => out13s []
+ }
+ final {
+ rule in13s => out13s_2 []
+ }
+switch 6 (in6s,out6s) [] {
+ rule in6s => out6s []
+ }
+ final {
+     
+ }
+switch 14 (in14s,out14s,out14s_2) [] {
+ rule in14s => out14s []
+ }
+ final {
+ rule in14s => out14s_2 []
+ }
+switch 7 (in7s,out7s,out7s_2) [] {
+ rule in7s => out7s []
+ }
+ final {
+ rule in7s => out7s_2 []
+ }
+switch 5 (in5s,out5s) [] {
+ rule in5s => out5s []
+ }
+ final {
+ rule in5s => out5s []
+ }
+link  => in9s []
+link out9s => in15s []
+link out9s_2 => in15s []
+link out15s => in13s []
+link out15s_2 => in14s []
+link out13s => in6s []
+link out13s_2 => in7s []
+link out6s => in14s []
+link out14s => in7s []
+link out14s_2 => in13s []
+link out7s => in5s []
+link out7s_2 => in5s []
+spec
+port=in9s -> (!(port=out5s) U ((port=in15s) & (TRUE U (port=out5s))))

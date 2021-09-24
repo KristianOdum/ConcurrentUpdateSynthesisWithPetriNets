@@ -1,0 +1,109 @@
+switch 3 (in3s,out3s,out3s_2) [] {
+ rule in3s => out3s []
+ }
+ final {
+ rule in3s => out3s_2 []
+ }
+switch 14 (in14s,out14s,out14s_2) [] {
+ rule in14s => out14s []
+ }
+ final {
+ rule in14s => out14s_2 []
+ }
+switch 2 (in2s,out2s,out2s_2) [] {
+ rule in2s => out2s []
+ }
+ final {
+ rule in2s => out2s_2 []
+ }
+switch 7 (in7s,out7s) [] {
+ rule in7s => out7s []
+ }
+ final {
+     
+ }
+switch 10 (in10s,out10s,out10s_2) [] {
+ rule in10s => out10s []
+ }
+ final {
+ rule in10s => out10s_2 []
+ }
+switch 11 (in11s,out11s,out11s_2) [] {
+ rule in11s => out11s []
+ }
+ final {
+ rule in11s => out11s_2 []
+ }
+switch 18 (in18s,out18s,out18s_2) [] {
+ rule in18s => out18s []
+ }
+ final {
+ rule in18s => out18s_2 []
+ }
+switch 29 (in29s,out29s,out29s_2) [] {
+ rule in29s => out29s []
+ }
+ final {
+ rule in29s => out29s_2 []
+ }
+switch 17 (in17s,out17s,out17s_2) [] {
+ rule in17s => out17s []
+ }
+ final {
+ rule in17s => out17s_2 []
+ }
+switch 22 (in22s,out22s) [] {
+ rule in22s => out22s []
+ }
+ final {
+     
+ }
+switch 25 (in25s,out25s,out25s_2) [] {
+ rule in25s => out25s []
+ }
+ final {
+ rule in25s => out25s_2 []
+ }
+switch 4 (in4s,out4s_2) [] {
+
+ }
+ final {
+ rule in4s => out4s_2 []
+ }
+switch 19 (in19s,out19s_2) [] {
+
+ }
+ final {
+ rule in19s => out19s_2 []
+ }
+switch 26 (in26s,out26s) [] {
+ rule in26s => out26s []
+ }
+ final {
+ rule in26s => out26s []
+ }
+link  => in3s []
+link out3s => in14s []
+link out3s_2 => in2s []
+link out14s => in2s []
+link out14s_2 => in4s []
+link out2s => in7s []
+link out2s_2 => in14s []
+link out7s => in10s []
+link out10s => in11s []
+link out10s_2 => in11s []
+link out11s => in18s []
+link out11s_2 => in18s []
+link out18s => in29s []
+link out18s_2 => in17s []
+link out29s => in17s []
+link out29s_2 => in19s []
+link out17s => in22s []
+link out17s_2 => in29s []
+link out22s => in25s []
+link out25s => in26s []
+link out25s_2 => in26s []
+link out4s_2 => in10s []
+link out19s_2 => in25s []
+spec
+port=in3s -> (!(port=out26s) U ((port=in2s) & (TRUE U (port=out26s))))

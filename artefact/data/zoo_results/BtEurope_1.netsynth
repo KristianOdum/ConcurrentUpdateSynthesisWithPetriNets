@@ -1,0 +1,25 @@
+[flattening model]
+[performing NNF]
+>>> set max_rules = 1, num bits = 1, mask = 1
+[generating graph: 0]
+[[start graph timer]]
+[[end graph timer]]
+[[start synthesis timer: 1612306166.950423]]
+[using checkers: mc = ]
+[start initial model checking]
+[finish initial model checking]
+[[stop synthesis timer: 1612306166.950772]]
+[finished synthesizing update (0.000970 s)]
+[------------------]
+(1:-1), #, (4:-1), #, (5:-1), #, (15:-1), #, (21:-1), #, (23:-1)
+num_wait = 5
+num_chgs = 11
+chg_time = 0.000052
+chk_time = 0.000176
+inc_time = 0.000081
+dfs_time = 0.000000
+mod_time = 0.000225
+ntp_time = 0.000000
+cex_count = 0
+@@@M24620@@@
+@@@T169@@@

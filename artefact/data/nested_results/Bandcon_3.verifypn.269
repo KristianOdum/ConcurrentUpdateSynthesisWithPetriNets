@@ -1,0 +1,12 @@
+
+Parameters: -q 0 -r 0 -p --strategy-output /dev/null data/nested_pn/Bandcon_3.pnml data/nested_pn/Bandcon_3.q 
+
+Search=OverApprox,Trace=DISABLED,State_Space_Exploration=DISABLED,Structural_Reduction=DISABLED,Struct_Red_Timout=60,Stubborn_Reduction=DISABLED,Query_Simplication=DISABLED,Siphon_Trap=DISABLED,LPSolve_Timeout=10,CTLAlgorithm=CZERO
+Finished parsing model
+Skipping linear-programming (-q 0)
+Query size reduced from 15 to 15 nodes ( 0 percent reduction).
+
+Using DFS instead of BestFS for synthesis
+Command terminated by signal 9
+@@@M6636780@@@
+@@@T1250819@@@

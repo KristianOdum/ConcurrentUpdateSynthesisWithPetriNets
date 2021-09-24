@@ -1,0 +1,116 @@
+switch 157 (in157s,out157s,out157s_2) [] {
+ rule in157s => out157s []
+ }
+ final {
+ rule in157s => out157s_2 []
+ }
+switch 173 (in173s,out173s,out173s_2) [] {
+ rule in173s => out173s []
+ }
+ final {
+ rule in173s => out173s_2 []
+ }
+switch 172 (in172s,out172s) [] {
+ rule in172s => out172s []
+ }
+ final {
+     
+ }
+switch 174 (in174s,out174s) [] {
+ rule in174s => out174s []
+ }
+ final {
+     
+ }
+switch 168 (in168s,out168s) [] {
+ rule in168s => out168s []
+ }
+ final {
+     
+ }
+switch 142 (in142s,out142s) [] {
+ rule in142s => out142s []
+ }
+ final {
+     
+ }
+switch 141 (in141s,out141s) [] {
+ rule in141s => out141s []
+ }
+ final {
+     
+ }
+switch 138 (in138s,out138s) [] {
+ rule in138s => out138s []
+ }
+ final {
+     
+ }
+switch 182 (in182s,out182s_2) [] {
+
+ }
+ final {
+ rule in182s => out182s_2 []
+ }
+switch 183 (in183s,out183s_2) [] {
+
+ }
+ final {
+ rule in183s => out183s_2 []
+ }
+switch 176 (in176s,out176s_2) [] {
+
+ }
+ final {
+ rule in176s => out176s_2 []
+ }
+switch 158 (in158s,out158s_2) [] {
+
+ }
+ final {
+ rule in158s => out158s_2 []
+ }
+switch 180 (in180s,out180s_2) [] {
+
+ }
+ final {
+ rule in180s => out180s_2 []
+ }
+switch 139 (in139s,out139s_2) [] {
+
+ }
+ final {
+ rule in139s => out139s_2 []
+ }
+switch 140 (in140s,out140s_2) [] {
+
+ }
+ final {
+ rule in140s => out140s_2 []
+ }
+switch 137 (in137s,out137s) [] {
+ rule in137s => out137s []
+ }
+ final {
+ rule in137s => out137s []
+ }
+link  => in157s []
+link out157s => in173s []
+link out157s_2 => in173s []
+link out173s => in172s []
+link out173s_2 => in182s []
+link out172s => in174s []
+link out174s => in168s []
+link out168s => in142s []
+link out142s => in141s []
+link out141s => in138s []
+link out138s => in137s []
+link out182s_2 => in183s []
+link out183s_2 => in176s []
+link out176s_2 => in158s []
+link out158s_2 => in180s []
+link out180s_2 => in139s []
+link out139s_2 => in140s []
+link out140s_2 => in137s []
+spec
+port=in157s -> (!(port=out137s) U ((port=in173s) & (TRUE U (port=out137s))))

@@ -1,0 +1,348 @@
+<pnml>
+<net id="ComposedModel" type="P/T net"><page id="page0">
+<place id="Controller" >
+<name><text>Controller</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P320" >
+<name><text>P320</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P321" >
+<name><text>P321</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P324" >
+<name><text>P324</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P332" >
+<name><text>P332</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P333" >
+<name><text>P333</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P335" >
+<name><text>P335</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P338" >
+<name><text>P338</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P339" >
+<name><text>P339</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P341" >
+<name><text>P341</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P342" >
+<name><text>P342</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P345" >
+<name><text>P345</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P353" >
+<name><text>P353</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P354" >
+<name><text>P354</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P355" >
+<name><text>P355</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P308" >
+<name><text>P308</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P310" >
+<name><text>P310</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P312" >
+<name><text>P312</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P355_initial" >
+<name><text>P355_initial</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P355_final" >
+<name><text>P355_final</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P320_visited" >
+<name><text>P320_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P321_visited" >
+<name><text>P321_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P324_visited" >
+<name><text>P324_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P332_visited" >
+<name><text>P332_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P333_visited" >
+<name><text>P333_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P335_visited" >
+<name><text>P335_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P338_visited" >
+<name><text>P338_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P339_visited" >
+<name><text>P339_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P341_visited" >
+<name><text>P341_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P342_visited" >
+<name><text>P342_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P345_visited" >
+<name><text>P345_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P353_visited" >
+<name><text>P353_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P354_visited" >
+<name><text>P354_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P355_visited" >
+<name><text>P355_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P308_visited" >
+<name><text>P308_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P310_visited" >
+<name><text>P310_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P312_visited" >
+<name><text>P312_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<transition id="T320_333">
+<player><value>0</value></player><name><text>T320_333</text></name></transition>
+<transition id="T312_335">
+<player><value>0</value></player><name><text>T312_335</text></name></transition>
+<transition id="T324_312">
+<player><value>0</value></player><name><text>T324_312</text></name></transition>
+<transition id="T308_312">
+<player><value>0</value></player><name><text>T308_312</text></name></transition>
+<transition id="T345_342">
+<player><value>0</value></player><name><text>T345_342</text></name></transition>
+<transition id="T339_338">
+<player><value>0</value></player><name><text>T339_338</text></name></transition>
+<transition id="T332_321">
+<player><value>0</value></player><name><text>T332_321</text></name></transition>
+<transition id="T355_320">
+<player><value>0</value></player><name><text>T355_320</text></name></transition>
+<transition id="T310_308">
+<player><value>0</value></player><name><text>T310_308</text></name></transition>
+<transition id="T355_310">
+<player><value>0</value></player><name><text>T355_310</text></name></transition>
+<transition id="T354_353">
+<player><value>0</value></player><name><text>T354_353</text></name></transition>
+<transition id="T335_341">
+<player><value>0</value></player><name><text>T335_341</text></name></transition>
+<transition id="T338_345">
+<player><value>0</value></player><name><text>T338_345</text></name></transition>
+<transition id="T321_324">
+<player><value>0</value></player><name><text>T321_324</text></name></transition>
+<transition id="T333_332">
+<player><value>0</value></player><name><text>T333_332</text></name></transition>
+<transition id="T341_339">
+<player><value>0</value></player><name><text>T341_339</text></name></transition>
+<transition id="T353_355">
+<player><value>0</value></player><name><text>T353_355</text></name></transition>
+<transition id="Inject_packet">
+<player><value>1</value></player><name><text>Inject_packet</text></name></transition>
+<transition id="Update_P355">
+<player><value>0</value></player><name><text>Update_P355</text></name></transition>
+<arc id="P320_T320_333" source="P320" target="T320_333" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P312_T312_335" source="P312" target="T312_335" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P324_T324_312" source="P324" target="T324_312" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P308_T308_312" source="P308" target="T308_312" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P345_T345_342" source="P345" target="T345_342" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P339_T339_338" source="P339" target="T339_338" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P332_T332_321" source="P332" target="T332_321" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P355_T355_320" source="P355" target="T355_320" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P310_T310_308" source="P310" target="T310_308" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P355_T355_310" source="P355" target="T355_310" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P354_T354_353" source="P354" target="T354_353" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P335_T335_341" source="P335" target="T335_341" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P338_T338_345" source="P338" target="T338_345" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P321_T321_324" source="P321" target="T321_324" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P333_T333_332" source="P333" target="T333_332" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P341_T341_339" source="P341" target="T341_339" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P353_T353_355" source="P353" target="T353_355" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Inject_packet" source="Controller" target="Inject_packet" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Update_P355" source="Controller" target="Update_P355" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P355_initial_Update_P355" source="P355_initial" target="Update_P355" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P355_initial_T355_310" source="P355_initial" target="T355_310" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P355_final_T355_320" source="P355_final" target="T355_320" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T320_333_P333" source="T320_333" target="P333" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T312_335_P335" source="T312_335" target="P335" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T324_312_P312" source="T324_312" target="P312" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T308_312_P312" source="T308_312" target="P312" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T345_342_P342" source="T345_342" target="P342" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T339_338_P338" source="T339_338" target="P338" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T332_321_P321" source="T332_321" target="P321" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T355_320_P320" source="T355_320" target="P320" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T310_308_P308" source="T310_308" target="P308" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T355_310_P310" source="T355_310" target="P310" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T354_353_P353" source="T354_353" target="P353" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T335_341_P341" source="T335_341" target="P341" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T338_345_P345" source="T338_345" target="P345" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T321_324_P324" source="T321_324" target="P324" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T333_332_P332" source="T333_332" target="P332" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T341_339_P339" source="T341_339" target="P339" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T353_355_P355" source="T353_355" target="P355" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P354" source="Inject_packet" target="P354" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P354_visited" source="Inject_packet" target="P354_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P355_Controller" source="Update_P355" target="Controller" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P355_P355_final" source="Update_P355" target="P355_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T355_310_P355_initial" source="T355_310" target="P355_initial" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T355_320_P355_final" source="T355_320" target="P355_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T355_320_P320_visited" source="T355_320" target="P320_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T332_321_P321_visited" source="T332_321" target="P321_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T321_324_P324_visited" source="T321_324" target="P324_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T333_332_P332_visited" source="T333_332" target="P332_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T320_333_P333_visited" source="T320_333" target="P333_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T312_335_P335_visited" source="T312_335" target="P335_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T339_338_P338_visited" source="T339_338" target="P338_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T341_339_P339_visited" source="T341_339" target="P339_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T335_341_P341_visited" source="T335_341" target="P341_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T345_342_P342_visited" source="T345_342" target="P342_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T338_345_P345_visited" source="T338_345" target="P345_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T354_353_P353_visited" source="T354_353" target="P353_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T353_355_P355_visited" source="T353_355" target="P355_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T310_308_P308_visited" source="T310_308" target="P308_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T355_310_P310_visited" source="T355_310" target="P310_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T324_312_P312_visited" source="T324_312" target="P312_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T308_312_P312_visited" source="T308_312" target="P312_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P320_visited_T320_333" source="P320_visited" target="T320_333" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P321_visited_T321_324" source="P321_visited" target="T321_324" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P324_visited_T324_312" source="P324_visited" target="T324_312" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P332_visited_T332_321" source="P332_visited" target="T332_321" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P333_visited_T333_332" source="P333_visited" target="T333_332" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P335_visited_T335_341" source="P335_visited" target="T335_341" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P338_visited_T338_345" source="P338_visited" target="T338_345" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P339_visited_T339_338" source="P339_visited" target="T339_338" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P341_visited_T341_339" source="P341_visited" target="T341_339" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P345_visited_T345_342" source="P345_visited" target="T345_342" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P353_visited_T353_355" source="P353_visited" target="T353_355" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P354_visited_T354_353" source="P354_visited" target="T354_353" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P355_visited_T355_310" source="P355_visited" target="T355_310" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P355_visited_T355_320" source="P355_visited" target="T355_320" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P308_visited_T308_312" source="P308_visited" target="T308_312" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P310_visited_T310_308" source="P310_visited" target="T310_308" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P312_visited_T312_335" source="P312_visited" target="T312_335" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+</page></net>
+</pnml>

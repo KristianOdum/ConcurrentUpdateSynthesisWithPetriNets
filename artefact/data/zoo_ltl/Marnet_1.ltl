@@ -1,0 +1,40 @@
+switch 8 (in8s,out8s,out8s_2) [] {
+ rule in8s => out8s []
+ }
+ final {
+ rule in8s => out8s_2 []
+ }
+switch 17 (in17s,out17s,out17s_2) [] {
+ rule in17s => out17s []
+ }
+ final {
+ rule in17s => out17s_2 []
+ }
+switch 5 (in5s,out5s) [] {
+ rule in5s => out5s []
+ }
+ final {
+     
+ }
+switch 2 (in2s,out2s,out2s_2) [] {
+ rule in2s => out2s []
+ }
+ final {
+ rule in2s => out2s_2 []
+ }
+switch 6 (in6s,out6s) [] {
+ rule in6s => out6s []
+ }
+ final {
+ rule in6s => out6s []
+ }
+link  => in8s []
+link out8s => in17s []
+link out8s_2 => in17s []
+link out17s => in5s []
+link out17s_2 => in2s []
+link out5s => in2s []
+link out2s => in6s []
+link out2s_2 => in6s []
+spec
+port=in8s -> (!(port=out6s) U ((port=in17s) & (TRUE U (port=out6s))))

@@ -1,0 +1,132 @@
+<pnml>
+<net id="ComposedModel" type="P/T net"><page id="page0">
+<place id="Controller" >
+<name><text>Controller</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P4" >
+<name><text>P4</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P5" >
+<name><text>P5</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P12" >
+<name><text>P12</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P18" >
+<name><text>P18</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P19" >
+<name><text>P19</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P5_initial" >
+<name><text>P5_initial</text></name>
+<initialMarking><text>1</text></initialMarking>
+</place>
+<place id="P5_final" >
+<name><text>P5_final</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P4_visited" >
+<name><text>P4_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P5_visited" >
+<name><text>P5_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P12_visited" >
+<name><text>P12_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P18_visited" >
+<name><text>P18_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<place id="P19_visited" >
+<name><text>P19_visited</text></name>
+<initialMarking><text>0</text></initialMarking>
+</place>
+<transition id="T18_19">
+<player><value>0</value></player><name><text>T18_19</text></name></transition>
+<transition id="T4_5">
+<player><value>0</value></player><name><text>T4_5</text></name></transition>
+<transition id="T12_18">
+<player><value>0</value></player><name><text>T12_18</text></name></transition>
+<transition id="T5_12">
+<player><value>0</value></player><name><text>T5_12</text></name></transition>
+<transition id="T5_18">
+<player><value>0</value></player><name><text>T5_18</text></name></transition>
+<transition id="Inject_packet">
+<player><value>1</value></player><name><text>Inject_packet</text></name></transition>
+<transition id="Update_P5">
+<player><value>0</value></player><name><text>Update_P5</text></name></transition>
+<arc id="P18_T18_19" source="P18" target="T18_19" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P4_T4_5" source="P4" target="T4_5" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P12_T12_18" source="P12" target="T12_18" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P5_T5_12" source="P5" target="T5_12" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P5_T5_18" source="P5" target="T5_18" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Inject_packet" source="Controller" target="Inject_packet" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Controller_Update_P5" source="Controller" target="Update_P5" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P5_initial_Update_P5" source="P5_initial" target="Update_P5" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P5_initial_T5_18" source="P5_initial" target="T5_18" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P5_final_T5_12" source="P5_final" target="T5_12" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T18_19_P19" source="T18_19" target="P19" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_5_P5" source="T4_5" target="P5" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T12_18_P18" source="T12_18" target="P18" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_12_P12" source="T5_12" target="P12" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_18_P18" source="T5_18" target="P18" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P4" source="Inject_packet" target="P4" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Inject_packet_P4_visited" source="Inject_packet" target="P4_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P5_Controller" source="Update_P5" target="Controller" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="Update_P5_P5_final" source="Update_P5" target="P5_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_18_P5_initial" source="T5_18" target="P5_initial" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_12_P5_final" source="T5_12" target="P5_final" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T4_5_P5_visited" source="T4_5" target="P5_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_12_P12_visited" source="T5_12" target="P12_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T12_18_P18_visited" source="T12_18" target="P18_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T5_18_P18_visited" source="T5_18" target="P18_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="T18_19_P19_visited" source="T18_19" target="P19_visited" type="normal">
+<inscription><text>1</text></inscription></arc>
+<arc id="P4_visited_T4_5" source="P4_visited" target="T4_5" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P5_visited_T5_18" source="P5_visited" target="T5_18" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P5_visited_T5_12" source="P5_visited" target="T5_12" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P12_visited_T12_18" source="P12_visited" target="T12_18" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+<arc id="P18_visited_T18_19" source="P18_visited" target="T18_19" weight="2" type="inhibitor" >
+<inscription><text>2</text></inscription></arc>
+</page></net>
+</pnml>
