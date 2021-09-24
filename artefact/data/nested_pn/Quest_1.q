@@ -1,1 +1,0 @@
-AG ((!(deadlock) or P338_visited >= 1) and (P450_visited >= 1 or P338_visited = 0))

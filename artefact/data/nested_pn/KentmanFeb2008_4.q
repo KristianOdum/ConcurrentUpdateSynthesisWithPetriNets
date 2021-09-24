@@ -1,1 +1,0 @@
-AG ((!(deadlock) or P5726_visited >= 1) and (P2819_visited >= 1 or P5726_visited = 0))

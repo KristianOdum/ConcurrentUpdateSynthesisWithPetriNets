@@ -1,1 +1,0 @@
-AG ((!(deadlock) or P117_visited >= 1) and  (P5_visited >= 1 or P117_visited = 0)  and  (P10_visited >= 1 or P117_visited = 0)  and  (P15_visited >= 1 or P117_visited = 0)  and  (P20_visited >= 1 or P117_visited = 0)  and  (P25_visited >= 1 or P117_visited = 0)  and  (P30_visited >= 1 or P117_visited = 0)  and  (P35_visited >= 1 or P117_visited = 0) )
