@@ -1,7 +1,7 @@
-import java.io.File
-import kotlinx.serialization.*
-import kotlinx.serialization.json.Json
+package translate
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateSynthesisModel(
@@ -9,9 +9,6 @@ data class UpdateSynthesisModel(
     @SerialName("Final_routing")    private val _finalRouting: List<List<Int>>,
     @SerialName("Properties")       private val _properties: Properties
 ) {
-    init {
-        println("init")
-    }
     val initialRouting: List<Edge> = _initRouting.map { Edge(it) }
     val finalRouting: List<Edge> = _finalRouting.map { Edge(it) }
     val waypoint: Waypoint = _properties.waypoint
@@ -42,7 +39,7 @@ open class Properties (
     @SerialName("Waypoint")     val waypoint: Waypoint,
     @SerialName("LoopFreedom")  val loopFreedom: LoopFreedom,
     @SerialName("Reachability") val reachability: Reachability
-    )
+)
 
 @Serializable
 class Waypoint(
@@ -58,8 +55,3 @@ class LoopFreedom(
 class Reachability(
     @SerialName("startNode")    val startNode : Int,
     @SerialName("finalNode")    val finalNode : Int)
-
-fun generatePetriNetModelFromUpdateNetworkJson(file: File) {
-    val data = Json.decodeFromString<UpdateSynthesisModel>(file.readText())
-}
-
