@@ -3,9 +3,7 @@ import translate.generatePnmlFileFromPetriGame
 import java.io.File
 
 fun main() {
-    val f = File(PetriGame::class.java.getResource("test.json")!!.toURI())
-    val text = f.readText()
-    val pg = generatePetriGameModelFromUpdateNetworkJson(text)
-
+    val jsonText = File(PetriGame::class.java.getResource("test.json")!!.toURI()).readText()
+    val pg = generatePetriGameModelFromUpdateNetworkJson(jsonText)
     generatePnmlFileFromPetriGame(pg, "output.pnml")
 }

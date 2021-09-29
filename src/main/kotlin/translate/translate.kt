@@ -14,8 +14,14 @@ import java.io.File
 
 
 fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
+    // HACK: Change waypoint with 1 element of type int to type list of ints
+    val regex = """waypoint": (\d+)""".toRegex()
+    val text = regex.replace(jsonText) {
+            m -> "waypoint\": [" + m.groups[1]!!.value + "]"
+    }
+
     // Update Synthesis Model loaded from json
-    val usm = Json.decodeFromString<UpdateSynthesisModel>(jsonText)
+    val usm = Json.decodeFromString<UpdateSynthesisModel>(text)
 
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
