@@ -12,7 +12,8 @@ import java.io.File
 
 fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     // Update Synthesis Model loaded from json
-    val usm = Json.decodeFromString<UpdateSynthesisModel>(jsonText)
+    val format = Json { isLenient = true }
+    val usm = format.decodeFromString<UpdateSynthesisModel>(jsonText)
 
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()

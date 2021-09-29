@@ -45,7 +45,7 @@ open class Properties (
 class Waypoint(
     @SerialName("startNode")    val startNode: Int,
     @SerialName("finalNode")    val finalNode: Int,
-    @SerialName("waypoint")     val waypoint: Int)
+    @SerialName("waypoint")     val waypoint: List<Int>)
 
 @Serializable
 class LoopFreedom(
