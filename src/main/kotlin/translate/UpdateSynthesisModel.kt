@@ -15,13 +15,6 @@ data class UpdateSynthesisModel(
     val loopFreedom: LoopFreedom = _properties.loopFreedom
     val reachability: Reachability = _properties.reachability
 
-    override fun toString(): String {
-        return  "initRouting: $initialRouting \n" +
-                "finalRouting: $finalRouting \n" +
-                "waypoint: ${waypoint.startNode} <-> ${waypoint.finalNode} :~ ${waypoint.waypoint} \n" +
-                "loopfreedom: ${loopFreedom.startNode} \n" +
-                "reachability: ${reachability.startNode} -> ${reachability.finalNode} \n"
-    }
 }
 
 @Serializable
@@ -45,7 +38,7 @@ open class Properties (
 class Waypoint(
     @SerialName("startNode")    val startNode: Int,
     @SerialName("finalNode")    val finalNode: Int,
-    @SerialName("waypoint")     val waypoint: Int)
+    @SerialName("waypoint")     val waypoints: List<Int>)
 
 @Serializable
 class LoopFreedom(

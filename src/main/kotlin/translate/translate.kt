@@ -5,6 +5,9 @@ import Arc
 import Place
 import Transition
 import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.io.File
