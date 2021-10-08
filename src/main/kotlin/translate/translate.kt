@@ -12,7 +12,6 @@ import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.io.File
 
-
 fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     // HACK: Change waypoint with 1 element of type int to type list of ints
     val regex = """waypoint": (\d+)""".toRegex()
@@ -82,7 +81,7 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     }
 
     // Update State Component
-    val pQueueing = Place(0, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
+    val pQueueing = Place(1, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
     val pCount = Place(0, "${updatePrefix}_P_COUNT").apply { places.add(this) }
@@ -99,35 +98,44 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     arcs.add(Arc(pCount.name, tReady.name, 1, true))
 
     // Switch Components
-    for (edge: Edge in (usm.initialRouting + usm.finalRouting).toSet() subtract  (usm.initialRouting.toSet() intersect usm.finalRouting.toSet())) {
-        val correspondent = usm.finalRouting.find { it.source == edge.source }
+    // Find u \in V where R^i(u) != R^f(u) //TODO: This can be optimized by finding iEdge and fEdge simultaneously
+    val verticesToSwitch = (((usm.initialRouting.toSet() + usm.finalRouting.toSet()).toSet()
+            subtract (usm.initialRouting.toSet() intersect usm.finalRouting.toSet()))
+            .map { it.source })
+
+    for (u: Int in verticesToSwitch) {
+        val iEdge = usm.initialRouting.find { it.source == u }
+        val fEdge = usm.finalRouting.find { it.source == u }
+
         // Make sure the initial edge is different to its final correspondent
-        if (correspondent != null && edge.target != correspondent.target) {
-            val pInit = Place(1, "${switchPrefix}_P_${edge.source}_INIT").apply { places.add(this) }
-            val pQueue = Place(0, "${switchPrefix}_P_${edge.source}_QUEUE").apply { places.add(this) }
-            val pFinal = Place(0, "${switchPrefix}_P_${edge.source}_FINAL").apply { places.add(this) }
-            val pLimiter = Place(1, "${switchPrefix}_P_${edge.source}_LIMITER").apply { places.add(this) }
-            val tQueue = Transition(true, "${switchPrefix}_T_${edge.source}_QUEUE").apply { transitions.add(this) }
-            val tUpdate = Transition(false, "${switchPrefix}_T_${edge.source}_UPDATE").apply { transitions.add(this) }
+        val pInit = Place(1, "${switchPrefix}_P_${u}_INIT").apply { places.add(this) }
+        val pQueue = Place(0, "${switchPrefix}_P_${u}_QUEUE").apply { places.add(this) }
+        val pFinal = Place(0, "${switchPrefix}_P_${u}_FINAL").apply { places.add(this) }
+        val pLimiter = Place(1, "${switchPrefix}_P_${u}_LIMITER").apply { places.add(this) }
+        val tQueue = Transition(true, "${switchPrefix}_T_${u}_QUEUE").apply { transitions.add(this) }
+        val tUpdate = Transition(false, "${switchPrefix}_T_${u}_UPDATE").apply { transitions.add(this) }
 
-            arcs.add(Arc(pInit.name, tQueue.name, 1, false))
-            arcs.add(Arc(tQueue.name, pInit.name, 1, false))
-            arcs.add(Arc(pLimiter.name, tQueue.name, 1, false))
-            arcs.add(Arc(tQueue.name, pQueue.name, 1, false))
-            arcs.add(Arc(pInit.name, tUpdate.name, 1, false))
-            arcs.add(Arc(pQueue.name, tUpdate.name, 1, false))
-            arcs.add(Arc(tUpdate.name, pFinal.name, 1, false))
-            arcs.add(Arc(tQueue.name, pCount.name, 1, false))
-            arcs.add(Arc(pUpdating.name, tUpdate.name, 1, false))
-            arcs.add(Arc(tUpdate.name, pUpdating.name, 1, false))
-            arcs.add(Arc(pQueue.name, pQueueing.name, 1, false))
-            arcs.add(Arc(pQueueing.name, pQueue.name, 1, false))
-            arcs.add(Arc(pCount.name, tUpdate.name, 1, false))
+        arcs.add(Arc(pInit.name, tQueue.name, 1, false))
+        arcs.add(Arc(tQueue.name, pInit.name, 1, false))
+        arcs.add(Arc(pLimiter.name, tQueue.name, 1, false))
+        arcs.add(Arc(tQueue.name, pQueue.name, 1, false))
+        arcs.add(Arc(pInit.name, tUpdate.name, 1, false))
+        arcs.add(Arc(pQueue.name, tUpdate.name, 1, false))
+        arcs.add(Arc(tUpdate.name, pFinal.name, 1, false))
+        arcs.add(Arc(tQueue.name, pCount.name, 1, false))
+        arcs.add(Arc(tQueue.name, pQueueing.name, 1, false))
+        arcs.add(Arc(pQueueing.name, tQueue.name, 1, false))
+        arcs.add(Arc(pUpdating.name, tUpdate.name, 1, false))
+        arcs.add(Arc(tUpdate.name, pUpdating.name, 1, false))
+        arcs.add(Arc(pCount.name, tUpdate.name, 1, false))
 
-            arcs.add(Arc(pInit.name, edgeToTransitionMap[edge]!!.name, 1, false))
-            arcs.add(Arc(edgeToTransitionMap[edge]!!.name, pInit.name, 1, false))
-            arcs.add(Arc(pFinal.name, edgeToTransitionMap[correspondent]!!.name, 1, false))
-            arcs.add(Arc(edgeToTransitionMap[correspondent]!!.name, pFinal.name, 1, false))
+        if (iEdge != null) {
+            arcs.add(Arc(pInit.name, edgeToTransitionMap[iEdge]!!.name, 1, false))
+            arcs.add(Arc(edgeToTransitionMap[iEdge]!!.name, pInit.name, 1, false))
+        }
+        if (fEdge != null) {
+            arcs.add(Arc(pFinal.name, edgeToTransitionMap[fEdge]!!.name, 1, false))
+            arcs.add(Arc(edgeToTransitionMap[fEdge]!!.name, pFinal.name, 1, false))
         }
     }
 
@@ -157,8 +165,8 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
                         attribute("id", p.name)
                         "graphics" {
                             "position" {
-                                attribute("x", "0")
-                                attribute("y", "0")
+                                attribute("x", p.pos.first)
+                                attribute("y", p.pos.second)
                             }
                         }
                         "name" {
@@ -174,6 +182,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
                         }
                         "initialMarking" {
                             "text" {
+                                attribute("removeWhitespace", "")
                                 -p.initialMarkings.toString()
                             }
                         }
@@ -201,8 +210,8 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
                         }
                         "graphics" {
                             "position" {
-                                attribute("x", "0")
-                                attribute("y", "0")
+                                attribute("x", t.pos.first)
+                                attribute("y", t.pos.second)
                             }
                         }
                     }
@@ -232,8 +241,11 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
         }
     }
 
-    val res = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n""" + pnml.toString()
-//    println(res)
+    // Apply some initial xml-format
+    var res = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>""" + "\n" + pnml.toString()
+
+    // Tapaal does not know xml.. so we must remove some newlines before and after ints
+    res = res.replace("""<([^\s]*) removeWhitespace="">\s*([^\s]+)\s*""".toRegex(), "<$1>$2")
 
     File(outputPath).writeText(res)
 

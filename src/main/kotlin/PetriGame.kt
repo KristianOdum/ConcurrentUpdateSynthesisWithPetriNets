@@ -7,7 +7,9 @@ class PetriGame(
 var nextId = 0
     get() = field++
 
-data class Place(val initialMarkings: Int, val name: String) {
+open class Node(val name: String, var pos: Pair<Int, Int> = Pair(0, 0))
+
+class Place(val initialMarkings: Int, name: String) : Node(name) {
     val id: Int = nextId
 
     override fun equals(other: Any?): Boolean {
@@ -22,7 +24,7 @@ data class Place(val initialMarkings: Int, val name: String) {
     }
 }
 
-data class Transition(val controllable: Boolean, val name: String) {
+class Transition(val controllable: Boolean, name: String) : Node(name) {
     val id: Int = nextId
 
     override fun equals(other: Any?): Boolean {
@@ -55,3 +57,4 @@ data class Arc(val sourceName: String, val targetName: String, val weight: Int =
         return result
     }
 }
+
