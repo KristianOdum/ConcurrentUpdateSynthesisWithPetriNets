@@ -67,17 +67,17 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
         // Add arc from place to transition
         val place: Place? = switchToPlaceMap[edge.source]
         assert(place != null)
-        arcs.add(Arc(place!!.name, t.name, 1, false))
+        arcs.add(Arc(place!!, t, 1, false))
 
         // Add arc from unvisitedplace to transition
         val uPlace: Place? = switchToUnvisitedPlaceMap[edge.target]
         assert(uPlace != null)
-        arcs.add(Arc(uPlace!!.name, t.name, 1, false))
+        arcs.add(Arc(uPlace!!, t, 1, false))
 
         // Add arc from transition to target node
         val tPlace: Place? = switchToPlaceMap[edge.target]
         assert(tPlace != null)
-        arcs.add(Arc(t.name, tPlace!!.name, 1, false))
+        arcs.add(Arc(t, tPlace!!, 1, false))
     }
 
     // Update State Component
@@ -88,14 +88,14 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
-    arcs.add(Arc(pQueueing.name, tConup.name, 1, false))
-    arcs.add(Arc(tConup.name, pUpdating.name, 1, false))
-    arcs.add(Arc(tConup.name, pBatches.name, 1, false))
-    arcs.add(Arc(pCount.name, tConup.name, 1, false))
-    arcs.add(Arc(tConup.name, pCount.name, 1, false))
-    arcs.add(Arc(pUpdating.name, tReady.name, 1, false))
-    arcs.add(Arc(tReady.name, pQueueing.name, 1, false))
-    arcs.add(Arc(pCount.name, tReady.name, 1, true))
+    arcs.add(Arc(pQueueing, tConup, 1, false))
+    arcs.add(Arc(tConup, pUpdating, 1, false))
+    arcs.add(Arc(tConup, pBatches, 1, false))
+    arcs.add(Arc(pCount, tConup, 1, false))
+    arcs.add(Arc(tConup, pCount, 1, false))
+    arcs.add(Arc(pUpdating, tReady, 1, false))
+    arcs.add(Arc(tReady, pQueueing, 1, false))
+    arcs.add(Arc(pCount, tReady, 1, true))
 
     // Switch Components
     // Find u \in V where R^i(u) != R^f(u) //TODO: This can be optimized by finding iEdge and fEdge simultaneously
@@ -115,27 +115,27 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
         val tQueue = Transition(true, "${switchPrefix}_T_${u}_QUEUE").apply { transitions.add(this) }
         val tUpdate = Transition(false, "${switchPrefix}_T_${u}_UPDATE").apply { transitions.add(this) }
 
-        arcs.add(Arc(pInit.name, tQueue.name, 1, false))
-        arcs.add(Arc(tQueue.name, pInit.name, 1, false))
-        arcs.add(Arc(pLimiter.name, tQueue.name, 1, false))
-        arcs.add(Arc(tQueue.name, pQueue.name, 1, false))
-        arcs.add(Arc(pInit.name, tUpdate.name, 1, false))
-        arcs.add(Arc(pQueue.name, tUpdate.name, 1, false))
-        arcs.add(Arc(tUpdate.name, pFinal.name, 1, false))
-        arcs.add(Arc(tQueue.name, pCount.name, 1, false))
-        arcs.add(Arc(tQueue.name, pQueueing.name, 1, false))
-        arcs.add(Arc(pQueueing.name, tQueue.name, 1, false))
-        arcs.add(Arc(pUpdating.name, tUpdate.name, 1, false))
-        arcs.add(Arc(tUpdate.name, pUpdating.name, 1, false))
-        arcs.add(Arc(pCount.name, tUpdate.name, 1, false))
+        arcs.add(Arc(pInit, tQueue, 1, false))
+        arcs.add(Arc(tQueue, pInit, 1, false))
+        arcs.add(Arc(pLimiter, tQueue, 1, false))
+        arcs.add(Arc(tQueue, pQueue, 1, false))
+        arcs.add(Arc(pInit, tUpdate, 1, false))
+        arcs.add(Arc(pQueue, tUpdate, 1, false))
+        arcs.add(Arc(tUpdate, pFinal, 1, false))
+        arcs.add(Arc(tQueue, pCount, 1, false))
+        arcs.add(Arc(tQueue, pQueueing, 1, false))
+        arcs.add(Arc(pQueueing, tQueue, 1, false))
+        arcs.add(Arc(pUpdating, tUpdate, 1, false))
+        arcs.add(Arc(tUpdate, pUpdating, 1, false))
+        arcs.add(Arc(pCount, tUpdate, 1, false))
 
         if (iEdge != null) {
-            arcs.add(Arc(pInit.name, edgeToTransitionMap[iEdge]!!.name, 1, false))
-            arcs.add(Arc(edgeToTransitionMap[iEdge]!!.name, pInit.name, 1, false))
+            arcs.add(Arc(pInit, edgeToTransitionMap[iEdge]!!, 1, false))
+            arcs.add(Arc(edgeToTransitionMap[iEdge]!!, pInit, 1, false))
         }
         if (fEdge != null) {
-            arcs.add(Arc(pFinal.name, edgeToTransitionMap[fEdge]!!.name, 1, false))
-            arcs.add(Arc(edgeToTransitionMap[fEdge]!!.name, pFinal.name, 1, false))
+            arcs.add(Arc(pFinal, edgeToTransitionMap[fEdge]!!, 1, false))
+            arcs.add(Arc(edgeToTransitionMap[fEdge]!!, pFinal, 1, false))
         }
     }
 
@@ -144,9 +144,9 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     // Packet Injection Component
     val tInject = Transition(true, "PACKET_INJECT_T")
     transitions.add(tInject)
-    arcs.add(Arc(pUpdating.name, tInject.name, 1, false))
-    arcs.add(Arc(tInject.name, switchToPlaceMap[initialNode]!!.name, 1, false))
-    arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!.name, tInject.name, 1, false))
+    arcs.add(Arc(pUpdating, tInject, 1, false))
+    arcs.add(Arc(tInject, switchToPlaceMap[initialNode]!!, 1, false))
+    arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1, false))
 
     return PetriGame(places.toList(), transitions.toList(), arcs.toList())
 }
@@ -219,8 +219,8 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
                 for (a: Arc in petriGame.arcs) {
                     "arc" {
                         attribute("id", a.name)
-                        attribute("source", a.sourceName)
-                        attribute("target", a.targetName)
+                        attribute("source", a.source.name)
+                        attribute("target", a.target.name)
                         attribute("type", if (a.inhibitor) "inhibitor" else "normal")
                         if (a.weight > 1) {
                             "inscription" {

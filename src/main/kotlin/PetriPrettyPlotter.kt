@@ -11,26 +11,17 @@ import java.lang.Exception
 class PetriPrettyPlotter {
     fun addGraphicsCoordinatesToPG(pg: PetriGame) {
         val nodes: MutableList<Node> = mutableListOf()
-        val edges: MutableList<Link> = mutableListOf()
         val nameToNodeMap: MutableMap<String, Node> = mutableMapOf()
 
-        var graph: MutableGraph = graph(directed = true) {  }
-
-        for (p: Place in pg.places) {
-            val n = node(p.name)
+        for (n: Node in pg.places + pg.transitions) {
+            val graphNode = node(n.name)
             nodes.add(n)
-            nameToNodeMap[p.name] = n
+            nameToNodeMap[n.name] = n
         }
 
-        for (t: Transition in pg.transitions) {
-            val n = node(t.name)
-            nodes.add(n)
-            nameToNodeMap[t.name] = n
-        }
-
-        graph = graph(directed = true) {
+        val graph: MutableGraph = graph(directed = true) {
             for (a: Arc in pg.arcs) {
-                    a.sourceName - a.targetName
+                    a.source.name - a.target.name
             }
         }
 

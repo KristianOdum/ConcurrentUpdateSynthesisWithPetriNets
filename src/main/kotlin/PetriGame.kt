@@ -40,19 +40,19 @@ class Transition(val controllable: Boolean, name: String) : Node(name) {
     }
 }
 
-data class Arc(val sourceName: String, val targetName: String, val weight: Int = 1, val inhibitor: Boolean) {
+data class Arc(val source: Node, val target: Node, val weight: Int = 1, val inhibitor: Boolean) {
     val name: String = nextId.toString()
 
     override fun equals(other: Any?): Boolean {
         return other is Arc
-                && other.sourceName == this.sourceName
-                && other.targetName == this.targetName
+                && other.source.name == this.source.name
+                && other.target.name == this.target.name
                 && other.inhibitor == this.inhibitor
     }
 
     override fun hashCode(): Int {
-        var result = sourceName.hashCode()
-        result = 31 * result + targetName.hashCode()
+        var result = source.name.hashCode()
+        result = 31 * result + target.name.hashCode()
         result = 31 * result + inhibitor.hashCode()
         return result
     }
