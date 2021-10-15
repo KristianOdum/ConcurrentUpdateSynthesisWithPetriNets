@@ -1,5 +1,7 @@
 import translate.generatePetriGameModelFromUpdateNetworkJson
 import translate.generatePnmlFileFromPetriGame
+import verification.Verifier
+import verification.bisectionSearch
 import java.io.File
 
 fun main() {
@@ -7,6 +9,10 @@ fun main() {
     val pg = generatePetriGameModelFromUpdateNetworkJson(jsonText)
     PetriPrettyPlotter().addGraphicsCoordinatesToPG(pg)
     generatePnmlFileFromPetriGame(pg, "output.pnml")
+
+    //val verifier = Verifier("verifypn-linux64", "ConcurrentRoutingUpdate.pnml")
+    //print(bisectionSearch(verifier, "ConcurrentRoutingUpdate.q", 10, 50))
+
 }
 
 
