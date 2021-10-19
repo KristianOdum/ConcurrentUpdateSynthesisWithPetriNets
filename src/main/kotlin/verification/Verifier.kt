@@ -4,8 +4,7 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 class Verifier(val enginePath: String, val modelPath: String) {
-
-    fun verifyQuery(queryPath: String): Boolean{
+    fun verifyQuery(queryPath: String): Boolean {
         val command = "./$enginePath $modelPath $queryPath -q 0 -r 0 -p"
         val pro = Runtime.getRuntime().exec(command)
         pro.waitFor()
@@ -15,7 +14,6 @@ class Verifier(val enginePath: String, val modelPath: String) {
 }
 
 fun bisectionSearch(verifier: Verifier, queryPath: String, startingIndex: Int, upperBound: Int): Int {
-
     //Returns 0 if unsatisfiable
     var batches = 0
     var j = 1
@@ -25,30 +23,30 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, startingIndex: Int, u
     var verified: Boolean
     var query = File(queryPath).readText()
     var tempFile = File("temp")
-    while (true){
+    while (true) {
         query = query.replace("SWITCH_BATCHES <= [0-9]*".toRegex(), "SWITCH_BATCHES <= $i")
         tempFile.writeText(query)
         verified = verifier.verifyQuery(queryPath)
 
-        if (verified){
+        if (verified) {
             batches = i
-            if(j == k){
+            if (j == k) {
                 break
             }
-            k = i-1
+            k = i - 1
             i = ceil((i + j) / 2.0).roundToInt()
         }
-        else{
-            if(j == k){
+        else {
+            if (j == k) {
                 break
             }
-            j = i+1
+            j = i + 1
             i = ceil((i + k) / 2.0).roundToInt()
         }
     }
-    if(tempFile.exists()){
+    if (tempFile.exists()) {
         tempFile.delete()
     }
-    return batches
 
+    return batches
 }

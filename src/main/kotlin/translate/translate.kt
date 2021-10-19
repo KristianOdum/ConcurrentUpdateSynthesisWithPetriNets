@@ -5,9 +5,6 @@ import Arc
 import Place
 import Transition
 import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.io.File
@@ -31,7 +28,7 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     val switchToUnvisitedPlaceMap: MutableMap<Int, Place> = mutableMapOf()
     val edgeToTransitionMap: MutableMap<Edge, Transition> = mutableMapOf()
 
-    val initialNode = usm.reachability.startNode
+    val initialNode = usm.reachability.initialNode
     val finalNode = usm.reachability.finalNode
 //    transitions.add(Transition(false, "INJECT"))
 
@@ -81,19 +78,16 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     }
 
     // Switch Components
-    // Find u \in V where R^i(u) != R^f(u) //TODO: This can be optimized by finding iEdge and fEdge simultaneously
-    val verticesToSwitch = (((usm.initialRouting.toSet() + usm.finalRouting.toSet()).toSet()
-            subtract (usm.initialRouting.toSet() intersect usm.finalRouting.toSet()))
-            .map { it.source })
-
-    // Find number of update switches
-    val numSwitches = verticesToSwitch.toSet().count()
+    // Find u \in V where R^i(u) != R^f(u) // TODO: This can be optimized by finding iEdge and fEdge simultaneously
+    val updatableSwitches: Set<Int> = (
+            ((usm.initialRouting union usm.finalRouting) subtract (usm.initialRouting intersect usm.finalRouting))
+            .map { it.source }).toSet()
 
     // Update State Component
     val pQueueing = Place(1, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
-    val pCount = Place(numSwitches, "${updatePrefix}_P_COUNT").apply { places.add(this) }
+    val pCount = Place(updatableSwitches.count(), "${updatePrefix}_P_COUNT").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
@@ -102,10 +96,10 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     arcs.add(Arc(tConup, pBatches, 1))
     arcs.add(Arc(pUpdating, tReady, 1))
     arcs.add(Arc(tReady, pQueueing, 1))
-    arcs.add(Arc(pCount, tReady, numSwitches))
-    arcs.add(Arc(tReady, pCount, numSwitches))
+    arcs.add(Arc(pCount, tReady, updatableSwitches.count()))
+    arcs.add(Arc(tReady, pCount, updatableSwitches.count()))
 
-    for (u: Int in verticesToSwitch) {
+    for (u: Int in updatableSwitches) {
         val iEdge = usm.initialRouting.find { it.source == u }
         val fEdge = usm.finalRouting.find { it.source == u }
 
@@ -151,7 +145,7 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     arcs.add(Arc(tInject, switchToPlaceMap[initialNode]!!, 1))
     arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
 
-    return PetriGame(places.toList(), transitions.toList(), arcs.toList())
+    return PetriGame(places, transitions, arcs)
 }
 
 fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): String {

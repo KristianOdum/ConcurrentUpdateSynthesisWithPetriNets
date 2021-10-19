@@ -5,25 +5,50 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateSynthesisModel(
-    @SerialName("Initial_routing")  private val _initRouting: List<List<Int>>,
-    @SerialName("Final_routing")    private val _finalRouting: List<List<Int>>,
+    @SerialName("Initial_routing")  private val _initRouting: Set<List<Int>>,
+    @SerialName("Final_routing")    private val _finalRouting: Set<List<Int>>,
     @SerialName("Properties")       private val _properties: Properties
 ) {
-    val initialRouting: List<Edge> = _initRouting.map { Edge(it) }
-    val finalRouting: List<Edge> = _finalRouting.map { Edge(it) }
+    val initialRouting: Set<Edge> = _initRouting.map { Edge(it) }.toSet()
+    val finalRouting: Set<Edge> = _finalRouting.map { Edge(it) }.toSet()
+
+    // routing properties
     val waypoint: Waypoint = _properties.waypoint
     val loopFreedom: LoopFreedom = _properties.loopFreedom
     val reachability: Reachability = _properties.reachability
-
 }
 
 @Serializable
-data class Edge (val l: List<Int>) {
-    val source: Int = l[0]
-    val target: Int = l[1]
+class Edge {
+    val source: Int
+    val target: Int
+
+    constructor(l: List<Int>) {
+        assert(l.size == 2)
+        source = l[0]
+        target = l[1]
+    }
+
+    constructor(s: Pair<Int, Int>) {
+        source = s.first
+        target = s.second
+    }
+
+    constructor(source: Int, target: Int) {
+        this.source = source
+        this.target = target
+    }
 
     override fun toString(): String {
         return "[$source, $target]"
+    }
+
+    override fun hashCode(): Int {
+        return source xor target shl 16
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is Edge && other.source == this.source && other.target == this.target
     }
 }
 
@@ -36,15 +61,15 @@ open class Properties (
 
 @Serializable
 class Waypoint(
-    @SerialName("startNode")    val startNode: Int,
+    @SerialName("startNode")    val initialNode: Int,
     @SerialName("finalNode")    val finalNode: Int,
     @SerialName("waypoint")     val waypoints: List<Int>)
 
 @Serializable
 class LoopFreedom(
-    @SerialName("startNode")    val startNode : Int)
+    @SerialName("startNode")    val initialNode : Int)
 
 @Serializable
 class Reachability(
-    @SerialName("startNode")    val startNode : Int,
+    @SerialName("startNode")    val initialNode : Int,
     @SerialName("finalNode")    val finalNode : Int)

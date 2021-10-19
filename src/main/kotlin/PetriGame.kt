@@ -1,7 +1,7 @@
 class PetriGame(
-    val places: List<Place>,
-    val transitions: List<Transition>,
-    val arcs: List<Arc>
+    val places: Set<Place>,
+    val transitions: Set<Transition>,
+    val arcs: Set<Arc>
     )
 
 var nextId = 0

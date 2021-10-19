@@ -1,56 +1,52 @@
 import guru.nidi.graphviz.model.*
 import guru.nidi.graphviz.*
 import guru.nidi.graphviz.engine.Format
-import guru.nidi.graphviz.model.Factory.node
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import java.lang.Exception
 
-class PetriPrettyPlotter {
-    fun addGraphicsCoordinatesToPG(pg: PetriGame) {
-        val nodes: MutableList<Node> = mutableListOf()
-        val nameToNodeMap: MutableMap<String, Node> = mutableMapOf()
+// This function uses graph creating tool Graphviz to artificially add positional information to a petri game
+fun addGraphicCoordinatesToPG(pg: PetriGame) {
+    val nodes: MutableList<Node> = mutableListOf()
+    val nameToNodeMap: MutableMap<String, Node> = mutableMapOf()
 
-        for (n: Node in pg.places + pg.transitions) {
-            val graphNode = node(n.name)
-            nodes.add(n)
-            nameToNodeMap[n.name] = n
+    // All places and transitions must be spaced out, we create a map by their name
+    for (n: Node in pg.places + pg.transitions) {
+        nodes.add(n)
+        nameToNodeMap[n.name] = n
+    }
+
+    // Graphviz creates a graph and the arcs determine the spacing
+    val graph: MutableGraph = graph(directed = true) {
+        for (a: Arc in pg.arcs) {
+            a.source.name - a.target.name
         }
+    }
 
-        val graph: MutableGraph = graph(directed = true) {
-            for (a: Arc in pg.arcs) {
-                    a.source.name - a.target.name
-            }
+    // Name to graphical (x,y) position
+    val nameToPos: MutableMap<String, Pair<Int, Int>> = mutableMapOf()
+
+    // Render the Graphviz graph to json, in order to extract the positions of nodes
+    val gv = graph.toGraphviz()
+    val jsonText = gv.render(Format.JSON).toString()
+    val jRoot = Json.parseToJsonElement(jsonText).jsonObject["objects"]
+
+    // Extracting the position directly from the json node tree
+    for (e in jRoot!!.jsonArray) {
+        val name = e.jsonObject["name"]!!.jsonPrimitive.content
+        val posX: Int =
+            e.jsonObject["_ldraw_"]!!.jsonArray[2].jsonObject["pt"]!!.jsonArray[0].jsonPrimitive.double.toInt()
+        val posY: Int =
+            e.jsonObject["_ldraw_"]!!.jsonArray[2].jsonObject["pt"]!!.jsonArray[1].jsonPrimitive.double.toInt()
+        nameToPos[name] = Pair(posX, posY)
+    }
+
+    // For each name and position tuple we add the graphics to the petri node, using the name to node map created initially
+    for (nameAndPos in nameToPos) {
+        val node = nameToNodeMap[nameAndPos.key]
+        if (node != null) {
+            node.pos = nameAndPos.value
         }
-
-        val nameToPos: MutableMap<String, Pair<Double, Double>> = mutableMapOf()
-
-        val gv = graph.toGraphviz()
-        val jsonText = gv.render(Format.JSON).toString()
-        val jRoot = Json.parseToJsonElement(jsonText).jsonObject["objects"]
-
-        for (e in jRoot!!.jsonArray) {
-            val name = e.jsonObject["name"]!!.jsonPrimitive.content
-            val pos1: Double = e.jsonObject["_ldraw_"]!!.jsonArray[2].jsonObject["pt"]!!.jsonArray[0].jsonPrimitive.toString().toDouble()
-            val pos2: Double = e.jsonObject["_ldraw_"]!!.jsonArray[2].jsonObject["pt"]!!.jsonArray[1].jsonPrimitive.toString().toDouble()
-            nameToPos[name] = Pair(pos1, pos2)
-        }
-
-        for (nameAndPos in nameToPos) {
-            val name = nameAndPos.key
-            val p = pg.places.find { it.name == nameAndPos.key }
-            val t = pg.transitions.find { it.name == nameAndPos.key }
-            val pos = nameAndPos.value.toList().map { it.toInt() }.zipWithNext()
-            if (p != null) {
-                p.pos = pos.first()
-            }
-            else if (t != null) {
-                t.pos = pos.first()
-            }
-            else
-                throw Exception("Positional graphics could not match name with any place or transition.")
-        }
+        else
+            throw Exception("Positional graphics could not match name with any place or transition.")
     }
 }
