@@ -11,7 +11,7 @@ fun main() {
     generatePnmlFileFromPetriGame(pg, "output.pnml")
 
     //val verifier = Verifier("verifypn-linux64", "ConcurrentRoutingUpdate.pnml")
-    //print(bisectionSearch(verifier, "ConcurrentRoutingUpdate.q", 10, 50))
+    //print(bisectionSearch(verifier, "ConcurrentRoutingUpdate.q", 2, 50))
 
 }
 
