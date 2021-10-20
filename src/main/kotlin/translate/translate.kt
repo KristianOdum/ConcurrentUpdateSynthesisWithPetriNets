@@ -9,15 +9,7 @@ import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.io.File
 
-fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
-    // HACK: Change waypoint with 1 element of type int to type list of ints
-    val regex = """waypoint": (\d+)""".toRegex()
-    val text = regex.replace(jsonText) {
-            m -> "waypoint\": [" + m.groups[1]!!.value + "]"
-    }
-
-    // Update Synthesis Model loaded from json
-    val usm = Json.decodeFromString<UpdateSynthesisModel>(text)
+fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel): PetriGame {
 
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
@@ -146,6 +138,17 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
 
     return PetriGame(places, transitions, arcs)
+}
+
+fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {
+    // HACK: Change waypoint with 1 element of type int to type list of ints
+    val regex = """waypoint": (\d+)""".toRegex()
+    val text = regex.replace(jsonText) {
+            m -> "waypoint\": [" + m.groups[1]!!.value + "]"
+    }
+
+    // Update Synthesis Model loaded from json
+    return Json.decodeFromString<UpdateSynthesisModel>(text)
 }
 
 fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): String {

@@ -1,12 +1,13 @@
-import translate.generatePetriGameModelFromUpdateNetworkJson
-import translate.generatePnmlFileFromPetriGame
+import translate.*
 import verification.Verifier
 import verification.bisectionSearch
 import java.io.File
 
 fun main() {
     val jsonText = File(PetriGame::class.java.getResource("test.json")!!.toURI()).readText()
-    val pg = generatePetriGameModelFromUpdateNetworkJson(jsonText)
+    val usm = updateSynthesisModelFromJsonText(jsonText)
+    val nfa = generateNFAFromUSM(usm)
+    val pg = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
     addGraphicCoordinatesToPG(pg)
     generatePnmlFileFromPetriGame(pg, "output.pnml")
 
