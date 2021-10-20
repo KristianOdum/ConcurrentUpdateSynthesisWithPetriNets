@@ -13,20 +13,23 @@ class Verifier(val enginePath: String, val modelPath: String) {
     }
 }
 
-fun bisectionSearch(verifier: Verifier, queryPath: String, startingIndex: Int, upperBound: Int): Int {
+fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int): Int {
     //Returns 0 if unsatisfiable
     var batches = 0
     var j = 1
-    var i = startingIndex
     var k = upperBound
+    var i: Int
 
     var verified: Boolean
     var query = File(queryPath).readText()
-    var tempFile = File("temp")
+    var tempFile = File("temp.q")
+
     while (true) {
+        i = ceil((j + k) / 2.0).roundToInt()
         query = query.replace("SWITCH_BATCHES <= [0-9]*".toRegex(), "SWITCH_BATCHES <= $i")
         tempFile.writeText(query)
-        verified = verifier.verifyQuery(queryPath)
+        verified = verifier.verifyQuery("temp.q")
+
 
         if (verified) {
             batches = i
@@ -34,14 +37,12 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, startingIndex: Int, u
                 break
             }
             k = i - 1
-            i = ceil((i + j) / 2.0).roundToInt()
         }
         else {
             if (j == k) {
                 break
             }
             j = i + 1
-            i = ceil((i + k) / 2.0).roundToInt()
         }
     }
     if (tempFile.exists()) {
