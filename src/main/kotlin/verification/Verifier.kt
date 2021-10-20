@@ -22,11 +22,11 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, startingIndex: Int, u
 
     var verified: Boolean
     var query = File(queryPath).readText()
-    var tempFile = File("temp")
+    var tempFile = File("temp.q")
     while (true) {
         query = query.replace("SWITCH_BATCHES <= [0-9]*".toRegex(), "SWITCH_BATCHES <= $i")
         tempFile.writeText(query)
-        verified = verifier.verifyQuery(queryPath)
+        verified = verifier.verifyQuery("temp.q")
 
         if (verified) {
             batches = i

@@ -145,6 +145,17 @@ fun generatePetriGameModelFromUpdateNetworkJson(jsonText: String): PetriGame {
     arcs.add(Arc(tInject, switchToPlaceMap[initialNode]!!, 1))
     arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
 
+
+    //var queryFile = File("tempQuery.q")
+    val finalName = "TOPOLOGY_P${finalNode}UV"
+
+    var switchNames = mutableListOf<String>()
+    for(switch in updatableSwitches){
+        switchNames.add("SWITCH_P${switch}F")
+    }
+
+    //queryFile.writeText(generateQuery(finalName, switchNames))
+
     return PetriGame(places, transitions, arcs)
 }
 
@@ -247,5 +258,15 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
     File(outputPath).writeText(res)
 
     return res
+}
+
+fun generateQuery(destination: String, switches: List<String>):  String{
+    var query = "EF (SWITCH_BATCHES <= 0 and ("
+    query += "$destination < 2 or (SWITCH_QUEUEING = 1"
+    for (switch in switches){
+        query += " and $switch = 1"
+    }
+    query += ")))"
+    return query
 }
 
