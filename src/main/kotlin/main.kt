@@ -14,8 +14,8 @@ fun main() {
     addGraphicCoordinatesToPG(pg)
     generatePnmlFileFromPetriGame(pg, "output.pnml")
 
-    //val verifier = Verifier("verifypn-linux64", "ConcurrentRoutingUpdate.pnml")
-    //print(bisectionSearch(verifier, "tempQuery.q", 50))
+    val verifier = Verifier("verifypn-linux64", "ConcurrentRoutingUpdate.pnml")
+    bisectionSearch(verifier, "tempQuery.q", 50)
 
 }
 

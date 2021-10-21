@@ -2,6 +2,8 @@ package verification
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.roundToInt
+import kotlin.system.measureTimeMillis
+import kotlin.time.measureTime
 
 class Verifier(val enginePath: String, val modelPath: String) {
     fun verifyQuery(queryPath: String): Boolean {
@@ -13,7 +15,8 @@ class Verifier(val enginePath: String, val modelPath: String) {
     }
 }
 
-fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int): Int {
+fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int) {
+    print("Finding minimum required batches to satisfy $queryPath on ${verifier.modelPath}...\n")
     //Returns 0 if unsatisfiable
     var batches = 0
     var j = 1
@@ -24,11 +27,16 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int): Int
     var query = File(queryPath).readText()
     var tempFile = File("temp.q")
 
+    var time: Long
     while (true) {
         i = ceil((j + k) / 2.0).roundToInt()
         query = query.replace("SWITCH_BATCHES <= [0-9]*".toRegex(), "SWITCH_BATCHES <= $i")
         tempFile.writeText(query)
-        verified = verifier.verifyQuery("temp.q")
+
+        time = measureTimeMillis {
+            verified = verifier.verifyQuery("temp.q")
+        }
+        print("Verification ${if(verified) "succeeded" else "failed"} in ${time/1000.0} seconds with <= $i batches\n")
 
 
         if (verified) {
@@ -49,5 +57,5 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int): Int
         tempFile.delete()
     }
 
-    return batches
+    print("Minimum $batches batches required to satisfy query")
 }
