@@ -35,6 +35,6 @@ fun main(args: Array<String>) {
     generatePnmlFileFromPetriGame(petriGame, modelPath)
 
     val verifier = Verifier(enginePath, modelPath)
-    bisectionSearch(verifier, queryPath, 50)
+    bisectionSearch(verifier, queryPath, usm.switches.size)
 
 }

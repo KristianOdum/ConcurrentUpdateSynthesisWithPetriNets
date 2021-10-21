@@ -2,6 +2,7 @@ package verification
 import java.io.File
 import java.nio.file.Path
 import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
@@ -16,8 +17,8 @@ class Verifier(val enginePath: Path, val modelPath: Path) {
 }
 
 fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
-    print("Finding minimum required batches to satisfy $queryPath on ${verifier.modelPath}...\n")
-    //Returns 0 if unsatisfiable
+    print("Finding minimum required batches to satisfy the query")
+
     var batches = 0
     var j = 1
     var k = upperBound
@@ -25,11 +26,11 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
 
     var verified: Boolean
     var query = queryPath.toFile().readText()
-    var tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
+    val tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
 
     var time: Long
     while (true) {
-        i = ceil((j + k) / 2.0).roundToInt()
+        i = floor((j + k) / 2.0).roundToInt()
         query = query.replace("SWITCH_BATCHES <= [0-9]*".toRegex(), "SWITCH_BATCHES <= $i")
         tempQueryFile.writeText(query)
 
@@ -38,24 +39,22 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
         }
         print("Verification ${if(verified) "succeeded" else "failed"} in ${time/1000.0} seconds with <= $i batches\n")
 
-
         if (verified) {
             batches = i
-            if (j == k) {
-                break
-            }
+            if (j == k) break
             k = i - 1
-        }
-        else {
-            if (j == k) {
-                break
-            }
+        } else {
+            if (j == k) break
             j = i + 1
         }
     }
+
     if (tempQueryFile.exists()) {
         tempQueryFile.delete()
     }
 
-    print("Minimum $batches batches required to satisfy query")
+    if(batches == 0)
+        print("Could not satisfy the query with any number of batches!")
+    else
+        print("Minimum $batches batches required to satisfy the query!")
 }
