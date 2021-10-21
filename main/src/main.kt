@@ -18,5 +18,3 @@ fun main() {
     bisectionSearch(verifier, "tempQuery.q", 50)
 
 }
-
-

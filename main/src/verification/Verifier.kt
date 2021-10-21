@@ -3,7 +3,6 @@ import java.io.File
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
-import kotlin.time.measureTime
 
 class Verifier(val enginePath: String, val modelPath: String) {
     fun verifyQuery(queryPath: String): Boolean {
@@ -25,13 +24,13 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int) {
 
     var verified: Boolean
     var query = File(queryPath).readText()
-    var tempFile = File("temp.q")
+    var tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
 
     var time: Long
     while (true) {
         i = ceil((j + k) / 2.0).roundToInt()
         query = query.replace("SWITCH_BATCHES <= [0-9]*".toRegex(), "SWITCH_BATCHES <= $i")
-        tempFile.writeText(query)
+        tempQueryFile.writeText(query)
 
         time = measureTimeMillis {
             verified = verifier.verifyQuery("temp.q")
@@ -53,8 +52,8 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int) {
             j = i + 1
         }
     }
-    if (tempFile.exists()) {
-        tempFile.delete()
+    if (tempQueryFile.exists()) {
+        tempQueryFile.delete()
     }
 
     print("Minimum $batches batches required to satisfy query")

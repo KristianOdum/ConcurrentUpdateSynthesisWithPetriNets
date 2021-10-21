@@ -32,7 +32,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     // TODO: We do not consider undefinity at all, and that is probably fine
 
     // Network Topology Components
-    // Create places. Everyone has a placekeeper place, an yet-to-be-visited place,
+    // Create places. Everyone has a placekeeper place and a yet-to-be-visited place,
     val allSwitches = (usm.initialRouting + usm.finalRouting).let {
             allEdges -> allEdges.map { it.source } + allEdges.map { it.target }
         }.distinct()
