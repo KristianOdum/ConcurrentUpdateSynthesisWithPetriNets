@@ -51,11 +51,12 @@ fun generateNFAFromUSM(usm: UpdateSynthesisModel): NFA {
     val initialState = currentId++
 
     // NFA for reachability
-    val reachabilityNFA = reachabilityNFA(currentId, usm)
-    graphOfNFA(reachabilityNFA.first)
+    val reach = reachabilityNFA(currentId, usm)
+    val reachNFA = reach.first
+    currentId = reach.second
+    graphOfNFA(reachNFA)
 
     // NFA for waypoint
-
 
 
     return nfa
@@ -88,12 +89,3 @@ fun graphOfNFA(nfa: NFA) {
 
     graph.toGraphviz().render(Format.PNG).toFile(File("nfa.png"))
 }
-
-//class SwitchNFAState(val value: Int, val final: Boolean = false) : State { }
-//
-//class EdgeNFAEvent(val switches: Set<Int>) : Event<SwitchNFAState> {
-//    override fun accept(from: SwitchNFAState, to: SwitchNFAState) { }
-//}
-//
-//fun NFA.Builder<SwitchNFAState, EdgeNFAEvent>.addTransition(from:Int, act: Int, to:Int): NFA.Builder<SwitchNFAState, EdgeNFAEvent> =
-//    this.addTransition(SwitchNFAState(from), EdgeNFAEvent(act), SwitchNFAState(to))
