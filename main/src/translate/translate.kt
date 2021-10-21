@@ -8,8 +8,11 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.io.File
+import java.nio.file.Path
 
-fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel): PetriGame {
+data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path)
+
+fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel): PetriGameQueryPath {
 
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
@@ -137,18 +140,13 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     arcs.add(Arc(tInject, switchToPlaceMap[initialNode]!!, 1))
     arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
 
-
-    //var queryFile = File("tempQuery.q")
+    // Generate the query
+    val queryPath = kotlin.io.path.createTempFile("query")
     val finalName = "TOPOLOGY_P${finalNode}UV"
+    val switchNames = updatableSwitches.map { "SWITCH_P${it}F" }
+    queryPath.toFile().writeText(generateQuery(finalName, switchNames))
 
-    var switchNames = mutableListOf<String>()
-    for(switch in updatableSwitches){
-        switchNames.add("SWITCH_P${switch}F")
-    }
-
-    //queryFile.writeText(generateQuery(finalName, switchNames))
-
-    return PetriGame(places, transitions, arcs)
+    return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath)
 }
 
 fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {
@@ -162,7 +160,7 @@ fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {
     return Json.decodeFromString<UpdateSynthesisModel>(text)
 }
 
-fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): String {
+fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String {
     val pnml = xml("pnml") {
         xmlns = """http://www.pnml.org/version-2009/grammar/pnml"""
         "net" {
@@ -258,7 +256,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
     // Tapaal does not know xml.. so we must remove some newlines before and after ints
     res = res.replace("""<([^\s]*) removeWhitespace="">\s*([^\s]+)\s*""".toRegex(), "<$1>$2")
 
-    File(outputPath).writeText(res)
+    modelPath.toFile().writeText(res)
 
     return res
 }

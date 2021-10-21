@@ -1,12 +1,13 @@
 package verification
 import java.io.File
+import java.nio.file.Path
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
-class Verifier(val enginePath: String, val modelPath: String) {
+class Verifier(val enginePath: Path, val modelPath: Path) {
     fun verifyQuery(queryPath: String): Boolean {
-        val command = "./$enginePath $modelPath $queryPath -q 0 -r 0 -p"
+        val command = "${enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0 -p"
         val pro = Runtime.getRuntime().exec(command)
         pro.waitFor()
         val output = pro.inputStream.readAllBytes().map { Char(it.toInt()) }.joinToString("")
@@ -14,7 +15,7 @@ class Verifier(val enginePath: String, val modelPath: String) {
     }
 }
 
-fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int) {
+fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
     print("Finding minimum required batches to satisfy $queryPath on ${verifier.modelPath}...\n")
     //Returns 0 if unsatisfiable
     var batches = 0
@@ -23,7 +24,7 @@ fun bisectionSearch(verifier: Verifier, queryPath: String, upperBound: Int) {
     var i: Int
 
     var verified: Boolean
-    var query = File(queryPath).readText()
+    var query = queryPath.toFile().readText()
     var tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
 
     var time: Long
