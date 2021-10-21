@@ -11,7 +11,7 @@ data class UpdateSynthesisModel(
 ) {
     val initialRouting: Set<Edge> = _initRouting.map { Edge(it) }.toSet()
     val finalRouting: Set<Edge> = _finalRouting.map { Edge(it) }.toSet()
-    val switches: Set<Int> = (initialRouting union finalRouting).fold(mutableSetOf()) { acc, e: Edge -> mutableSetOf(e.source, e.target) }
+    val switches: Set<Int> = (initialRouting union finalRouting).fold(setOf()) { acc, e: Edge -> acc union setOf(e.source, e.target) }
 
     // routing properties
     val waypoint: Waypoint = _properties.waypoint

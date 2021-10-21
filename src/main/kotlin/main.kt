@@ -7,6 +7,9 @@ fun main() {
     val jsonText = File(PetriGame::class.java.getResource("test.json")!!.toURI()).readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
     val nfa = generateNFAFromUSM(usm)
+
+    graphOfNFA(nfa)
+
     val pg = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
     addGraphicCoordinatesToPG(pg)
     generatePnmlFileFromPetriGame(pg, "output.pnml")
