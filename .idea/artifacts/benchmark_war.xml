@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="benchmark:war">
+    <output-path>$PROJECT_DIR$/benchmark/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <exploded>false</exploded>
+        <module>benchmark</module>
+        <packaging>war</packaging>
+        <unpackNestedArchives>false</unpackNestedArchives>
+      </options>
+    </properties>
+    <root id="archive" name="benchmark.war">
+      <element id="artifact" artifact-name="benchmark:war exploded" />
+    </root>
+  </artifact>
+</component>

@@ -8,8 +8,11 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.io.File
+import java.nio.file.Path
 
-fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel): PetriGame {
+data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path)
+
+fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel): PetriGameQueryPath {
 
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
@@ -32,7 +35,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     // TODO: We do not consider undefinity at all, and that is probably fine
 
     // Network Topology Components
-    // Create places. Everyone has a placekeeper place, an yet-to-be-visited place,
+    // Create places. Everyone has a placekeeper place and a yet-to-be-visited place,
     val allSwitches = (usm.initialRouting + usm.finalRouting).let {
             allEdges -> allEdges.map { it.source } + allEdges.map { it.target }
         }.distinct()
@@ -80,9 +83,12 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
     val pCount = Place(updatableSwitches.count(), "${updatePrefix}_P_COUNT").apply { places.add(this) }
+    val pQueueCount = Place(0, "${updatePrefix}_P_QUEUE_COUNT").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
+    arcs.add(Arc(pQueueCount, tConup, 1))
+    arcs.add(Arc(tConup, pQueueCount, 1))
     arcs.add(Arc(pQueueing, tConup, 1))
     arcs.add(Arc(tConup, pUpdating, 1))
     arcs.add(Arc(tConup, pBatches, 1))
@@ -103,6 +109,8 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
         val tQueue = Transition(true, "${switchPrefix}_T_${u}_QUEUE").apply { transitions.add(this) }
         val tUpdate = Transition(false, "${switchPrefix}_T_${u}_UPDATE").apply { transitions.add(this) }
 
+        arcs.add(Arc(tQueue, pQueueCount, 1))
+        arcs.add(Arc(pQueueCount, tUpdate, 1))
         arcs.add(Arc(pInit, tQueue, 1))
         arcs.add(Arc(tQueue, pInit, 1))
         arcs.add(Arc(pLimiter, tQueue, 1))
@@ -131,24 +139,19 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     // Visited Places are already handled previously
 
     // Packet Injection Component
-    val tInject = Transition(true, "PACKET_INJECT_T")
+    val tInject = Transition(false, "PACKET_INJECT_T")
     transitions.add(tInject)
     arcs.add(Arc(pUpdating, tInject, 1))
     arcs.add(Arc(tInject, switchToPlaceMap[initialNode]!!, 1))
     arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
 
+    // Generate the query
+    val queryPath = kotlin.io.path.createTempFile("query")
+    val finalName = "${topologyPrefix}_UV_${finalNode}"
+    val switchNames = updatableSwitches.map { "${switchPrefix}_P_${it}_FINAL" }
+    queryPath.toFile().writeText(generateQuery(finalName, switchNames))
 
-    //var queryFile = File("tempQuery.q")
-    val finalName = "TOPOLOGY_P${finalNode}UV"
-
-    var switchNames = mutableListOf<String>()
-    for(switch in updatableSwitches){
-        switchNames.add("SWITCH_P${switch}F")
-    }
-
-    //queryFile.writeText(generateQuery(finalName, switchNames))
-
-    return PetriGame(places, transitions, arcs)
+    return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath)
 }
 
 fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {
@@ -162,7 +165,7 @@ fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {
     return Json.decodeFromString<UpdateSynthesisModel>(text)
 }
 
-fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): String {
+fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String {
     val pnml = xml("pnml") {
         xmlns = """http://www.pnml.org/version-2009/grammar/pnml"""
         "net" {
@@ -204,7 +207,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
                         attribute("id", t.name)
                         "player" {
                             "value" {
-                                -if (t.controllable) "1" else "0"
+                                -if (t.controllable) "0" else "1"
                             }
                         }
 
@@ -236,6 +239,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
                         if (a.weight > 1) {
                             "inscription" {
                                 "text" {
+                                    attribute("removeWhitespace", "")
                                     -a.weight.toString()
                                 }
                             }
@@ -258,14 +262,14 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, outputPath: String): Str
     // Tapaal does not know xml.. so we must remove some newlines before and after ints
     res = res.replace("""<([^\s]*) removeWhitespace="">\s*([^\s]+)\s*""".toRegex(), "<$1>$2")
 
-    File(outputPath).writeText(res)
+    modelPath.toFile().writeText(res)
 
     return res
 }
 
 fun generateQuery(destination: String, switches: List<String>):  String{
-    var query = "EF (SWITCH_BATCHES <= 0 and ("
-    query += "$destination < 2 or (SWITCH_QUEUEING = 1"
+    var query = "EF (UPDATE_P_BATCHES <= 0 and ("
+    query += "$destination < 2 or (UPDATE_P_QUEUEING = 1"
     for (switch in switches){
         query += " and $switch = 1"
     }

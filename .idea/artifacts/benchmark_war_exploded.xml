@@ -1,0 +1,51 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="benchmark:war exploded">
+    <output-path>$PROJECT_DIR$/benchmark/target/benchmark</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <exploded>true</exploded>
+        <module>benchmark</module>
+        <packaging>war</packaging>
+        <unpackNestedArchives>false</unpackNestedArchives>
+      </options>
+    </properties>
+    <root id="root">
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="benchmark" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib:1.5.31" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-common:1.5.31" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.5.31" />
+          <element id="library" level="project" name="Maven: guru.nidi:graphviz-kotlin:0.18.1" />
+          <element id="library" level="project" name="Maven: guru.nidi:graphviz-java:0.18.1" />
+          <element id="library" level="project" name="Maven: org.webjars.npm:viz.js-graphviz-java:2.1.3" />
+          <element id="library" level="project" name="Maven: guru.nidi.com.kitfox:svgSalamander:1.1.3" />
+          <element id="library" level="project" name="Maven: net.arnx:nashorn-promise:0.1.1" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-exec:1.3" />
+          <element id="library" level="project" name="Maven: com.google.code.findbugs:jsr305:3.0.2" />
+          <element id="library" level="project" name="Maven: org.slf4j:jcl-over-slf4j:1.7.30" />
+          <element id="library" level="project" name="Maven: org.slf4j:jul-to-slf4j:1.7.30" />
+          <element id="library" level="project" name="Maven: guru.nidi.com.eclipsesource.j2v8:j2v8_linux_x86_64:4.6.0" />
+          <element id="library" level="project" name="Maven: org.leibnizcenter:nfa:1.0.0" />
+          <element id="library" level="project" name="Maven: com.google.guava:guava:20.0" />
+          <element id="library" level="project" name="Maven: com.github.krukow:clj-ds:0.0.4" />
+          <element id="library" level="project" name="Maven: org.jetbrains:annotations:22.0.0" />
+          <element id="library" level="project" name="Maven: org.redundent:kotlin-xml-builder:1.7.3" />
+          <element id="library" level="project" name="Maven: org.apache.commons:commons-lang3:3.5" />
+          <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.32" />
+          <element id="library" level="project" name="Maven: org.slf4j:slf4j-simple:1.7.32" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.2.2" />
+          <element id="library" level="project" name="Maven: org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.2.2" />
+        </element>
+      </element>
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/benchmark/target/benchmark/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="javaee-facet-resources" facet="benchmark/web/Web" />
+    </root>
+  </artifact>
+</component>
