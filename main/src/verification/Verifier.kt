@@ -1,6 +1,7 @@
 package verification
 import java.io.File
 import java.nio.file.Path
+import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -17,40 +18,35 @@ class Verifier(val enginePath: Path, val modelPath: Path) {
 }
 
 fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
-    print("Finding minimum required batches to satisfy the query")
+    print("Finding minimum required batches to satisfy the query\n")
 
     var batches = 0
-    var j = 1
-    var k = upperBound
-    var i: Int
+    var start = 1
+    var end = upperBound
+    var mid: Int
 
     var verified: Boolean
     var query = queryPath.toFile().readText()
     val tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
 
     var time: Long
-    while (true) {
-        i = floor((j + k) / 2.0).roundToInt()
-        query = query.replace("SWITCH_BATCHES <= [0-9]*".toRegex(), "SWITCH_BATCHES <= $i")
+    while (start <= end) {
+        mid = floor((start + end) / 2.0).roundToInt()
+        query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $mid")
+
         tempQueryFile.writeText(query)
 
         time = measureTimeMillis {
-            verified = verifier.verifyQuery("temp.q")
+            verified = verifier.verifyQuery(tempQueryFile.path)
         }
-        print("Verification ${if(verified) "succeeded" else "failed"} in ${time/1000.0} seconds with <= $i batches\n")
+        print("Verification ${if(verified) "succeeded" else "failed"} in ${time/1000.0} seconds with <= $mid batches\n")
 
         if (verified) {
-            batches = i
-            if (j == k) break
-            k = i - 1
+            batches = mid
+            end = mid - 1
         } else {
-            if (j == k) break
-            j = i + 1
+            start = mid + 1
         }
-    }
-
-    if (tempQueryFile.exists()) {
-        tempQueryFile.delete()
     }
 
     if(batches == 0)

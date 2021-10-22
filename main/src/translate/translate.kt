@@ -83,9 +83,12 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
     val pCount = Place(updatableSwitches.count(), "${updatePrefix}_P_COUNT").apply { places.add(this) }
+    val pQueueCount = Place(0, "${updatePrefix}_P_QUEUE_COUNT").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
+    arcs.add(Arc(pQueueCount, tConup, 1))
+    arcs.add(Arc(tConup, pQueueCount, 1))
     arcs.add(Arc(pQueueing, tConup, 1))
     arcs.add(Arc(tConup, pUpdating, 1))
     arcs.add(Arc(tConup, pBatches, 1))
@@ -106,6 +109,8 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
         val tQueue = Transition(true, "${switchPrefix}_T_${u}_QUEUE").apply { transitions.add(this) }
         val tUpdate = Transition(false, "${switchPrefix}_T_${u}_UPDATE").apply { transitions.add(this) }
 
+        arcs.add(Arc(tQueue, pQueueCount, 1))
+        arcs.add(Arc(pQueueCount, tUpdate, 1))
         arcs.add(Arc(pInit, tQueue, 1))
         arcs.add(Arc(tQueue, pInit, 1))
         arcs.add(Arc(pLimiter, tQueue, 1))
@@ -142,8 +147,8 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
 
     // Generate the query
     val queryPath = kotlin.io.path.createTempFile("query")
-    val finalName = "TOPOLOGY_P${finalNode}UV"
-    val switchNames = updatableSwitches.map { "SWITCH_P${it}F" }
+    val finalName = "${topologyPrefix}_UV_${finalNode}"
+    val switchNames = updatableSwitches.map { "${switchPrefix}_P_${it}_FINAL" }
     queryPath.toFile().writeText(generateQuery(finalName, switchNames))
 
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath)
@@ -202,7 +207,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
                         attribute("id", t.name)
                         "player" {
                             "value" {
-                                -if (t.controllable) "1" else "0"
+                                -if (t.controllable) "0" else "1"
                             }
                         }
 
@@ -234,6 +239,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
                         if (a.weight > 1) {
                             "inscription" {
                                 "text" {
+                                    attribute("removeWhitespace", "")
                                     -a.weight.toString()
                                 }
                             }
@@ -262,8 +268,8 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
 }
 
 fun generateQuery(destination: String, switches: List<String>):  String{
-    var query = "EF (SWITCH_BATCHES <= 0 and ("
-    query += "$destination < 2 or (SWITCH_QUEUEING = 1"
+    var query = "EF (UPDATE_P_BATCHES <= 0 and ("
+    query += "$destination < 2 or (UPDATE_P_QUEUEING = 1"
     for (switch in switches){
         query += " and $switch = 1"
     }
