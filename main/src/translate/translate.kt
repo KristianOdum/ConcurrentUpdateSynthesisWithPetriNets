@@ -139,7 +139,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     // Visited Places are already handled previously
 
     // Packet Injection Component
-    val tInject = Transition(true, "PACKET_INJECT_T")
+    val tInject = Transition(false, "PACKET_INJECT_T")
     transitions.add(tInject)
     arcs.add(Arc(pUpdating, tInject, 1))
     arcs.add(Arc(tInject, switchToPlaceMap[initialNode]!!, 1))
