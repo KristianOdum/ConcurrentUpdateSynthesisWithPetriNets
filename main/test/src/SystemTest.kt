@@ -7,13 +7,24 @@ internal class SystemTest {
 
     fun runJSON(file: String): String {
         assert(SystemTest::class.java.getResource(file) != null)
-        assert(verifypnPath.exists())
-        val cmd = "java -jar ${mainJar.toAbsolutePath()} ${verifypnPath.toAbsolutePath()} ${SystemTest::class.java.getResource(file)!!.path}"
+        assert(Common.verifypnPath.exists())
+        val cmd = "java -jar ${Common.mainJar.toAbsolutePath()} ${Common.verifypnPath.toAbsolutePath()} ${SystemTest::class.java.getResource(file)!!.path}"
         val p = Runtime.getRuntime().exec(cmd)
 
         p.waitFor()
 
         return p.inputStream.readAllBytes().map { Char(it.toInt()) }.joinToString("")
+    }
+
+    @Test
+    fun jarTest() {
+        val cmd = "java -jar ${Common.mainJar.toAbsolutePath()}"
+        val p = Runtime.getRuntime().exec(cmd)
+
+        p.waitFor()
+        val t = p.inputStream.readAllBytes().map { Char(it.toInt()) }.joinToString("")
+
+        assert(!t.contains("Error: Could not find or load"))
     }
 
     @Test
