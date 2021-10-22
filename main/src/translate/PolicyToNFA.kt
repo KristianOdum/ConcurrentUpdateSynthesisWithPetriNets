@@ -9,11 +9,12 @@ import java.io.File
 
 class NFA {
     val states: MutableSet<State> = mutableSetOf()
-    var initialState: State = State(-1)
+    var initialState: State = State("NULL")
     val actions: MutableSet<Action> = mutableSetOf()
 
     fun addAction(a: Action): NFA {
         actions += a
+        assert(a.from.name != "NULL" && a.to.name != "NULL")
 
         if (!states.contains(a.from))
             addState(a.from)
@@ -58,25 +59,25 @@ open class Action(val from: State, val label: Int, val to: State, val epsilon: B
                 && other.epsilon == this.epsilon
 
     override fun hashCode(): Int {
-        var result = from.id
+        var result = from.hashCode()
         result = 31 * result + label
-        result = 31 * result + to.id
+        result = 31 * result + to.hashCode()
         result = 31 * result + epsilon.hashCode()
         return result
     }
 }
 
-open class State(val id: Int, val type: StateType = StateType.NORMAL) {
-    override fun hashCode(): Int {
-        var result = id
-        result = 31 * result + type.name.hashCode()
-        return result
-    }
-
+open class State(val name: String, val type: StateType = StateType.NORMAL) {
     override fun equals(other: Any?): Boolean =
         other is State
-                && other.id == this.id
+                && other.name == this.name
                 && other.type == this.type
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + type.hashCode()
+        return result
+    }
 }
 
 enum class StateType {
@@ -91,15 +92,15 @@ fun generateNFAFromUSM(usm: UpdateSynthesisModel): NFA {
     val waypoints = waypointNFAs(usm)
 
     val nfa = waypoints.first() intersect reachabilityNFA
-    graphOfNFA(nfa, "pedro")
+    nfa.toGraphviz("pedro")
 
     return nfa
 }
 
 fun reachabilityNFA(usm: UpdateSynthesisModel): NFA {
-    val sI = State(1, StateType.INITIAL)
-    val sJ = State(2)
-    val sF = State(3, StateType.FINAL)
+    val sI = State("1", StateType.INITIAL)
+    val sJ = State("2")
+    val sF = State("3", StateType.FINAL)
     val nfa = NFA().addAction(Action(sI, usm.reachability.initialNode, sJ))
         .apply {
             for (s in (usm.switches subtract setOf(usm.reachability.finalNode)))
@@ -111,9 +112,9 @@ fun reachabilityNFA(usm: UpdateSynthesisModel): NFA {
 }
 
 fun waypointNFAs(usm: UpdateSynthesisModel): List<NFA> {
-    val sI = State(1, StateType.INITIAL)
-    val sJ = State(2)
-    val sF = State(3, StateType.FINAL)
+    val sI = State("1", StateType.INITIAL)
+    val sJ = State("2")
+    val sF = State("3", StateType.FINAL)
     val res = mutableListOf<NFA>()
 
     for (w in usm.waypoint.waypoints) {
@@ -153,8 +154,7 @@ infix fun NFA.intersect(other: NFA): NFA {
             else
                 StateType.NORMAL
 
-            nextId = "${s1.id}${s2.id}".toInt()
-            newStateToState[Pair(s1, s2)] = State(nextId, type)
+            newStateToState[Pair(s1, s2)] = State((++nextId).toString(), type)
         }
     }
 
@@ -175,16 +175,18 @@ infix fun NFA.intersect(other: NFA): NFA {
         }
     }
 
+
+
     return NFA().addActions(newActions.toList()).addStates(newStateToState.values.toList())
 }
 
-fun graphOfNFA(nfa: NFA, path: String) {
+fun NFA.toGraphviz(path: String) {
     val graph: MutableGraph = graph(directed = true) {
-        for (a in nfa.actions) {
+        for (a in actions) {
             if (a.from.type == StateType.FINAL)
-                a.from.id.toString()[Attributes.attrs(listOf(Attributes.attr("shape", "doublecircle")))]
+                a.from.name.toString()[Attributes.attrs(listOf(Attributes.attr("shape", "doublecircle")))]
             else if (a.from.type == StateType.INITIAL)
-                a.from.id.toString()[Attributes.attrs(
+                a.from.name.toString()[Attributes.attrs(
                     listOf(
                         Attributes.attr("fillcolor", "gray"),
                         Attributes.attr("style", "filled")
@@ -192,9 +194,9 @@ fun graphOfNFA(nfa: NFA, path: String) {
                 )]
 
             if (a.to.type == StateType.FINAL)
-                a.to.id.toString()[Attributes.attrs(listOf(Attributes.attr("shape", "doublecircle")))]
+                a.to.name.toString()[Attributes.attrs(listOf(Attributes.attr("shape", "doublecircle")))]
             else if (a.to.type == StateType.INITIAL)
-                a.to.id.toString()[Attributes.attrs(
+                a.to.name.toString()[Attributes.attrs(
                     listOf(
                         Attributes.attr("fillcolor", "gray"),
                         Attributes.attr("style", "filled")
@@ -202,9 +204,9 @@ fun graphOfNFA(nfa: NFA, path: String) {
                 )]
 
             if (a.epsilon)
-                (a.from.id.toString() - a.to.id.toString()).add(Attributes.attr("label", "eps"))
+                (a.from.name.toString() - a.to.name.toString()).add(Attributes.attr("label", "eps"))
             else
-                (a.from.id.toString() - a.to.id.toString()).add(Attributes.attr("label", a.label.toString()))
+                (a.from.name.toString() - a.to.name.toString()).add(Attributes.attr("label", a.label.toString()))
         }
     }
 

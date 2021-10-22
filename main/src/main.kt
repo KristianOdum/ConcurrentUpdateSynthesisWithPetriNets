@@ -13,7 +13,6 @@ conupsyn <verifypn_engine_path> <testJson>
 }
 
 fun main(args: Array<String>) {
-
     val (enginePath, testJson) = try {
         Pair(
             Path(args[0]),
@@ -27,7 +26,7 @@ fun main(args: Array<String>) {
 
     val jsonText = testJson.toFile().readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
-    val nfa = generateNFAFromUSM(usm)
+    val nfa = generateNFAFromUSM(usm).toGraphviz("pedro")
 
     val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
     addGraphicCoordinatesToPG(petriGame)
