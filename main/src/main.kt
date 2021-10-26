@@ -28,9 +28,11 @@ fun runProblem(enginePath: Path, testCase: File) {
     val usm = updateSynthesisModelFromJsonText(jsonText)
     println("Switches: ${usm.switches.size}")
 
+    val nfa = generateNFAFromUSMProperties(usm)
+    nfa.toGraphviz("nfa")
+    nfa.prune()
+    nfa.toGraphviz("nfa_pruned")
     outputPrettyNetwork(usm)
-
-    val nfa = generateNFAFromUSM(usm)
 
     println("Converting to PN model...")
     val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
