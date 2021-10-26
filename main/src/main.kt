@@ -1,7 +1,6 @@
 import translate.*
 import verification.Verifier
 import verification.bisectionSearch
-import java.io.File
 import kotlin.io.path.Path
 
 fun printUsage() {
@@ -23,10 +22,12 @@ fun main(args: Array<String>) {
         throw e
     }
 
-
     val jsonText = testJson.toFile().readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
-    val nfa = generateNFAFromUSM(usm).toGraphviz("pedro")
+    val nfa = generateNFAFromUSMProperties(usm)
+    nfa.toGraphviz("nfa")
+    nfa.prune()
+    nfa.toGraphviz("nfa_pruned")
 
     val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
     addGraphicCoordinatesToPG(petriGame)
@@ -35,5 +36,4 @@ fun main(args: Array<String>) {
 
     val verifier = Verifier(enginePath, modelPath)
     bisectionSearch(verifier, queryPath, usm.switches.size)
-
 }
