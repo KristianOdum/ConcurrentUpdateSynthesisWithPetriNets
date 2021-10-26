@@ -81,20 +81,20 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     val pQueueing = Place(1, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
-    val pCount = Place(updatableSwitches.count(), "${updatePrefix}_P_COUNT").apply { places.add(this) }
-    val pQueueCount = Place(0, "${updatePrefix}_P_QUEUE_COUNT").apply { places.add(this) }
+    val pInvCount = Place(updatableSwitches.count(), "${updatePrefix}_P_INVCOUNT").apply { places.add(this) }
+    val pCount = Place(0, "${updatePrefix}_P_COUNT").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
-    arcs.add(Arc(pQueueCount, tConup, 1))
-    arcs.add(Arc(tConup, pQueueCount, 1))
+    arcs.add(Arc(pCount, tConup, 1))
+    arcs.add(Arc(tConup, pCount, 1))
     arcs.add(Arc(pQueueing, tConup, 1))
     arcs.add(Arc(tConup, pUpdating, 1))
     arcs.add(Arc(tConup, pBatches, 1))
     arcs.add(Arc(pUpdating, tReady, 1))
     arcs.add(Arc(tReady, pQueueing, 1))
-    arcs.add(Arc(pCount, tReady, updatableSwitches.count()))
-    arcs.add(Arc(tReady, pCount, updatableSwitches.count()))
+    arcs.add(Arc(pInvCount, tReady, updatableSwitches.count()))
+    arcs.add(Arc(tReady, pInvCount, updatableSwitches.count()))
 
     for (u: Int in updatableSwitches) {
         val iEdge = usm.initialRouting.find { it.source == u }
@@ -108,8 +108,8 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
         val tQueue = Transition(true, "${switchPrefix}_T_${u}_QUEUE").apply { transitions.add(this) }
         val tUpdate = Transition(false, "${switchPrefix}_T_${u}_UPDATE").apply { transitions.add(this) }
 
-        arcs.add(Arc(tQueue, pQueueCount, 1))
-        arcs.add(Arc(pQueueCount, tUpdate, 1))
+        arcs.add(Arc(tQueue, pCount, 1))
+        arcs.add(Arc(pCount, tUpdate, 1))
         arcs.add(Arc(pInit, tQueue, 1))
         arcs.add(Arc(tQueue, pInit, 1))
         arcs.add(Arc(pLimiter, tQueue, 1))
@@ -117,12 +117,12 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
         arcs.add(Arc(pInit, tUpdate, 1))
         arcs.add(Arc(pQueue, tUpdate, 1))
         arcs.add(Arc(tUpdate, pFinal, 1))
-        arcs.add(Arc(pCount, tQueue, 1,))
+        arcs.add(Arc(pInvCount, tQueue, 1,))
         arcs.add(Arc(tQueue, pQueueing, 1))
         arcs.add(Arc(pQueueing, tQueue, 1))
         arcs.add(Arc(pUpdating, tUpdate, 1))
         arcs.add(Arc(tUpdate, pUpdating, 1))
-        arcs.add(Arc(tUpdate, pCount, 1))
+        arcs.add(Arc(tUpdate, pInvCount, 1))
 
         if (iEdge != null) {
             arcs.add(Arc(pInit, edgeToTransitionMap[iEdge]!!, 1))
