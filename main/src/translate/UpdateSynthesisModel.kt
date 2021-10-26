@@ -24,6 +24,9 @@ class Edge {
     val source: Int
     val target: Int
 
+    operator fun component1() = source
+    operator fun component2() = target
+
     constructor(l: List<Int>) {
         assert(l.size == 2)
         source = l[0]

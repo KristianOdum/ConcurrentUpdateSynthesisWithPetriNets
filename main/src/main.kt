@@ -28,6 +28,8 @@ fun runProblem(enginePath: Path, testCase: File) {
     val usm = updateSynthesisModelFromJsonText(jsonText)
     println("Switches: ${usm.switches.size}")
 
+    outputPrettyNetwork(usm)
+
     val nfa = generateNFAFromUSM(usm)
 
     println("Converting to PN model...")
