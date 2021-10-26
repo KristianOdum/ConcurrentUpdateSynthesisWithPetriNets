@@ -4,7 +4,6 @@ import java.io.File
 import kotlin.io.path.exists
 
 internal class SystemTest {
-
     fun runJSON(file: String): String {
         assert(SystemTest::class.java.getResource(file) != null)
         assert(Common.verifypnPath.exists())
@@ -31,7 +30,6 @@ internal class SystemTest {
     fun simpleTest() {
         val out = runJSON("test.json")
 
-        assert(out.contains("Minimum 2 batches"))
+        assert(out.lowercase().contains("minimum 2 batches"))
     }
-
 }
