@@ -32,6 +32,7 @@ fun runProblem(enginePath: Path, testCase: File) {
     nfa.toGraphviz("nfa")
     nfa.prune()
     nfa.toGraphviz("nfa_pruned")
+    outputPrettyNetwork(usm)
 
     println("Converting to PN model...")
     val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
