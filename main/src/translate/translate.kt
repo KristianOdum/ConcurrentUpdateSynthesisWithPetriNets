@@ -25,7 +25,6 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
 
     val initialNode = usm.reachability.initialNode
     val finalNode = usm.reachability.finalNode
-//    transitions.add(Transition(false, "INJECT"))
 
     // Constants used for consistent naming
     val topologyPrefix = "TOPOLOGY"
