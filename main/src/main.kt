@@ -29,13 +29,15 @@ fun runProblem(enginePath: Path, testCase: File) {
     println("Switches: ${usm.switches.size}")
 
     val nfa = generateNFAFromUSMProperties(usm)
-    nfa.toGraphviz("nfa")
+    nfa.toGraphviz("prev.png")
     nfa.prune()
-    nfa.toGraphviz("nfa_pruned")
+    nfa.toGraphviz("after.png")
+    val nfaPetri = nfa.toPetriGame().petriGame
     outputPrettyNetwork(usm)
 
     println("Converting to PN model...")
-    val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
+    val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
+    generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path("petriwithnfa.pnml"))
     println("Places: ${petriGame.places.size}")
     println("Transitions: ${petriGame.transitions.size}")
     println("Arcs: ${petriGame.arcs.size}")
