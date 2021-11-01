@@ -6,15 +6,12 @@ import json
 def main(jsonPath, waypointNFAPath):
     init = nx.DiGraph()
     fin = nx.DiGraph()
-    edges = []
     with open(jsonPath) as json_file:
         data = json.load(json_file)
         for i_edge in data['Initial_routing']:
             init.add_edge(str(i_edge[0]), str(i_edge[1]))
-            add_edge(edges, str(i_edge[0]), str(i_edge[1]))
         for f_edge in data['Final_routing']:
             fin.add_edge(str(f_edge[0]), str(f_edge[1]))
-            add_edge(edges, str(f_edge[0]), str(f_edge[1]))
 
         properties = data['Properties']
         reachbility = properties['Reachability']
@@ -56,10 +53,6 @@ def outgoing_actions(state, actions, used_labels):
     for a in actions:
         if a[0] == state and a[2] not in used_labels:
             yield a
-
-def add_edge(lst, src, tgt):
-    if((src, tgt) not in lst):
-        lst.append((src, tgt))
 
 if __name__ == '__main__':
     jsonPath = sys.argv[1]
