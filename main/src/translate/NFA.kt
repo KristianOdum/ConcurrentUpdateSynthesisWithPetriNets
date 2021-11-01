@@ -108,9 +108,11 @@ fun generateNFAFromUSMProperties(usm: UpdateSynthesisModel): NFA {
 
     // NFA for waypoint
     val waypoints = waypointNFAs(usm)
+    val combinedWaypointNFA = waypoints.reduce() { acc:NFA, it: NFA -> acc intersect it }
+    combinedWaypointNFA.export("WaypointsNFA")
 
     // Intersect the reachability NFA with the waypoints
-    return waypoints.fold(reachabilityNFA) { acc: NFA, it: NFA -> acc intersect it }
+    return combinedWaypointNFA intersect reachabilityNFA
 }
 
 fun reachabilityNFA(usm: UpdateSynthesisModel): NFA {
@@ -256,4 +258,16 @@ fun NFA.toGraphviz(path: String) {
 
     graph.toGraphviz().render(Format.PNG)
         .toFile(File("graphics_out/" + if (path.endsWith(".png")) path else "$path.png"))
+}
+
+fun NFA.export(path: String){
+    var output = "States:"
+    output += states.map { it -> it.name }.joinToString(",")
+    output += "\nInitial state:${initialState!!.name}"
+    output += "\nFinal states:"
+    output += finalStates.map { it -> it.name }.joinToString(",")
+    output += "\nActions:"
+    output += actions.joinToString(separator = ";") { "${it.from.name},${it.to.name},${it.label}" }
+
+    File("${path}.txt").writeText(output)
 }
