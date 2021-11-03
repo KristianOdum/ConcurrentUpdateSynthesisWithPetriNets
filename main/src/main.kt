@@ -45,7 +45,7 @@ fun runProblem() {
 
     println("Converting to PN model...")
     val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
-    generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path("petriwithnfa.pnml"))
+    generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of("petriwithnfa.pnml"))
     println("Places: ${petriGame.places.size}")
     println("Transitions: ${petriGame.transitions.size}")
     println("Arcs: ${petriGame.arcs.size}")
