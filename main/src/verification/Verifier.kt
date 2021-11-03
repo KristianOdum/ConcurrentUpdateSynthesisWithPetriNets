@@ -9,9 +9,9 @@ import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
-class Verifier(val enginePath: Path, val modelPath: Path) {
+class Verifier(val modelPath: Path) {
     fun verifyQuery(queryPath: String): Boolean {
-        val command = "${enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0 -p"
+        val command = "${Options.enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0 -p"
         val pro = Runtime.getRuntime().exec(command)
         pro.waitFor()
         val output = pro.inputStream.readAllBytes().map { Char(it.toInt()) }.joinToString("")

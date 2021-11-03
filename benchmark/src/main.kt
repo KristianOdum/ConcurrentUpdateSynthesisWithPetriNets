@@ -1,3 +1,4 @@
+import com.xenomachina.argparser.ArgParser
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -11,6 +12,7 @@ benchmarks <engine_path> <tests_dir> [output_dir] [main_jar_path]
 }
 
 fun main(args: Array<String>) {
+
     val (enginePath, testsRootDir, outputDir, mainJarPath) = try {
         listOf(
             Path.of(args[0]),
