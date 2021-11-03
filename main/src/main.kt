@@ -59,11 +59,12 @@ fun runProblem() {
 object Options {
     val argParser = ArgParser(programName="conupsyn")
 
-    private val _testCase by argParser.argument(ArgType.String, fullName="test_case", description = "The test case to run on")
-    val testCase: Path by lazy { Path.of(_testCase) }
-
     private val _enginePath by argParser.argument(ArgType.String, description = "Path to verifypn-games engine")
     val enginePath: Path by lazy { Path.of(_enginePath) }
+
+    private val _testCase by argParser.argument(ArgType.String, fullName="test_case", description = "The test case to run on")
+    val testCase: Path by lazy { Path.of(_testCase) }
+    
     val drawGraphs by argParser.option(ArgType.Boolean, shortName = "g", description = "Draw graphs for various components").default(false)
 }
 
