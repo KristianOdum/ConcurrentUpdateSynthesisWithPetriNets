@@ -54,7 +54,12 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
 
         // Goes sequentially down from 5 batches
         if (!flag) {
-            mid = 5
+            if(end < 5){
+                mid = end
+            }
+            else{
+                mid = 5
+            }
             flag = true
         } else {
             mid -= 1
