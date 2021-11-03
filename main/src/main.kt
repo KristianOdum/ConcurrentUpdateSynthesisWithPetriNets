@@ -35,7 +35,8 @@ fun runProblem(enginePath: Path, testCase: File) {
     outputPrettyNetwork(usm)
 
     println("Converting to PN model...")
-    val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
+    val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
+
     println("Places: ${petriGame.places.size}")
     println("Transitions: ${petriGame.transitions.size}")
     println("Arcs: ${petriGame.arcs.size}")
@@ -45,7 +46,7 @@ fun runProblem(enginePath: Path, testCase: File) {
     generatePnmlFileFromPetriGame(petriGame, modelPath)
 
     val verifier = Verifier(enginePath, modelPath)
-    bisectionSearch(verifier, queryPath, usm.switches.size)
+    bisectionSearch(verifier, queryPath, modelPath, updateSwitchCount)
 }
 
 fun main(args: Array<String>) {

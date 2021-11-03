@@ -10,7 +10,7 @@ import org.redundent.kotlin.xml.*
 import java.io.File
 import java.nio.file.Path
 
-data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path)
+data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path, val updateSwitchCount: Int)
 
 fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel): PetriGameQueryPath {
 
@@ -80,7 +80,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     // Update State Component
     val pQueueing = Place(1, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
-    val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
+    val pBatches = Place(updatableSwitches.count(), "${updatePrefix}_P_BATCHES").apply { places.add(this) }
     val pInvCount = Place(updatableSwitches.count(), "${updatePrefix}_P_INVCOUNT").apply { places.add(this) }
     val pCount = Place(0, "${updatePrefix}_P_COUNT").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
@@ -90,7 +90,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     arcs.add(Arc(tConup, pCount, 1))
     arcs.add(Arc(pQueueing, tConup, 1))
     arcs.add(Arc(tConup, pUpdating, 1))
-    arcs.add(Arc(tConup, pBatches, 1))
+    arcs.add(Arc(pBatches, tConup, 1))
     arcs.add(Arc(pUpdating, tReady, 1))
     arcs.add(Arc(tReady, pQueueing, 1))
     arcs.add(Arc(pInvCount, tReady, updatableSwitches.count()))
@@ -150,7 +150,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     val switchNames = updatableSwitches.map { "${switchPrefix}_P_${it}_FINAL" }
     queryPath.toFile().writeText(generateQuery(finalName, switchNames))
 
-    return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath)
+    return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, updatableSwitches.count())
 }
 
 fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {
@@ -267,12 +267,12 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
 }
 
 fun generateQuery(destination: String, switches: List<String>):  String{
-    var query = "AG (UPDATE_P_BATCHES <= 0 and (!deadlock or "
+    var query = "AG (!deadlock or "
     query += "$destination < 2 or (UPDATE_P_QUEUEING = 1"
     for (switch in switches){
         query += " and $switch = 1"
     }
-    query += ")))"
+    query += "))"
     return query
 }
 
