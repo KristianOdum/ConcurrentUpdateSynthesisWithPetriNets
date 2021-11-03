@@ -197,7 +197,7 @@ infix fun NFA.intersect(other: NFA): NFA {
     val res = NFA()
     res.actions.addAll(newActions)
     res.setStatesByActions()
-    return NFA()
+    return res
 }
 
 fun NFA.prune() {
