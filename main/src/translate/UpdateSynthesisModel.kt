@@ -14,9 +14,11 @@ data class UpdateSynthesisModel(
     val switches: Set<Int> = (initialRouting union finalRouting).fold(setOf()) { acc, e: Edge -> acc union setOf(e.source, e.target) }
 
     // routing properties
-    val waypoint: Waypoint = _properties.waypoint
-    val loopFreedom: LoopFreedom = _properties.loopFreedom
     val reachability: Reachability = _properties.reachability
+    val waypoint: Waypoint = _properties.waypoint
+
+    // we never consider loop-freedom since we always have reachability, which preserves loop-freedom
+    val loopFreedom: LoopFreedom = _properties.loopFreedom
 }
 
 @Serializable
