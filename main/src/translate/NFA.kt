@@ -143,6 +143,7 @@ fun waypointNFAs(usm: UpdateSynthesisModel): Set<NFA> {
         }
 
         nfa.addAction(Action(sI, w.toString(), sJ))
+        nfa.addAction(Action(sJ, w.toString(), sJ))
 
         res.add(nfa)
     }
