@@ -18,8 +18,6 @@ class Verifier(val modelPath: Path) {
 }
 
 fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
-    println()
-    print("Finding minimum required batches to satisfy the query\n")
 
     var batches = 0
     var start = 1
@@ -68,10 +66,8 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
         }
     }
 
-    println()
-
     if (batches == 0)
-        print("Could not satisfy the query with any number of batches!")
+        println("Could not satisfy the query with any number of batches!")
     else
-        print("Minimum $batches batches required to satisfy the query!")
+        println("Minimum $batches batches required to satisfy the query!")
 }
