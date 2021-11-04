@@ -1,11 +1,10 @@
 package verification
-import java.io.File
+
 import java.nio.file.Path
-import java.util.concurrent.TimeUnit
-import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
+import java.io.InputStream
 
 class Verifier(val modelPath: Path) {
     fun verifyQuery(queryPath: String): Boolean {

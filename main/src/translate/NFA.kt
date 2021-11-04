@@ -235,9 +235,9 @@ fun NFA.toGraphviz(path: String) {
                 (a.from.name - a.to.name).add(Attributes.attr("label", a.label))
         }
     }
-
-    graph.toGraphviz().render(Format.PNG)
-        .toFile(File("graphics_out/" + if (path.endsWith(".png")) path else "$path.png"))
+    if (Options.drawGraphs)
+        graph.toGraphviz().render(Format.PNG)
+            .toFile(File("graphics_out/" + if (path.endsWith(".png")) path else "$path.png"))
 }
 
 fun NFA.export(path: String){

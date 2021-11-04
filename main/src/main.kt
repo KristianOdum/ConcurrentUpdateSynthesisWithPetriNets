@@ -1,3 +1,4 @@
+import Options.drawGraphs
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
@@ -5,12 +6,9 @@ import kotlinx.cli.required
 import translate.*
 import verification.Verifier
 import verification.bisectionSearch
-import java.io.File
 import java.nio.file.Path
+import kotlin.io.path.Path
 import kotlin.io.path.readText
-import kotlin.properties.Delegates
-import kotlin.properties.ReadOnlyProperty
-import kotlin.reflect.KProperty
 import kotlin.system.measureTimeMillis
 
 
@@ -37,10 +35,10 @@ fun runProblem() {
     println("Switches: ${usm.switches.size}")
 
     val nfa = generateNFAFromUSMProperties(usm)
-    nfa.toGraphviz("nfa")
+    if (Options.drawGraphs) nfa.toGraphviz("nfa")
     nfa.prune()
-    nfa.toGraphviz("nfa_pruned")
-    outputPrettyNetwork(usm)
+    if (Options.drawGraphs) nfa.toGraphviz("nfa_pruned")
+    if (Options.drawGraphs) outputPrettyNetwork(usm)
 
     println("Converting to PN model...")
     val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
