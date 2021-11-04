@@ -42,7 +42,7 @@ fun runProblem() {
             if (Options.drawGraphs) outputPrettyNetwork(usm)
         }
 
-        outputPrettyNetwork(usm)
+        if (Options.drawGraphs) outputPrettyNetwork(usm)
 
         println("Problem file: ${Options.testCase}")
         println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
