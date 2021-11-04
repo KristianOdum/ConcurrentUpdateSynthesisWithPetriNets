@@ -34,6 +34,17 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
     // Used to check if it is at all possible so update with max number of batches
     mid = end
 
+    query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $mid")
+
+    tempQueryFile.writeText(query)
+
+    time = measureTimeMillis {
+        verified = verifier.verifyQuery(tempQueryFile.path)
+    }
+
+    print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $mid batches\n")
+
+    /*
     while (start <= end) {
         query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $mid")
 
@@ -65,6 +76,7 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
             mid -= 1
         }
     }
+    */
 
     if (batches == 0)
         println("Could not satisfy the query with any number of batches!")

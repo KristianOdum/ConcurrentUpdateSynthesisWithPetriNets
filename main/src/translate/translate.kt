@@ -347,7 +347,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
 }
 
 fun generateQuery(destination: String, switches: List<String>, Count: Int):  String{
-    var query = "AG (UPDATE_P_BATCHES <= 0 and ${updatePrefix}_P_COUNT >= ${Count} and (!deadlock or "
+    var query = "AG (UPDATE_P_BATCHES <= 0 and ${updatePrefix}_P_INVCOUNT >= ${Count - 1} and (!deadlock or "
     query += "$destination < 2 or (UPDATE_P_QUEUEING = 1"
     for (switch in switches){
         query += " and $switch = 1"
