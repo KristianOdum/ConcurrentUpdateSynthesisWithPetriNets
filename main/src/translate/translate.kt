@@ -7,29 +7,30 @@ import Transition
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
-import java.io.File
+import java.lang.Exception
 import java.nio.file.Path
+
+// Constants used for consistent naming
+const val nfaPrefix = "NFA"
+const val topologyPrefix = "TOPOLOGY"
+const val updatePrefix = "UPDATE"
+const val switchPrefix = "SWITCH"
 
 data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path)
 
-fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel): PetriGameQueryPath {
-
+fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, policyNFA: NFA): PetriGameQueryPath {
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
     val transitions: MutableSet<Transition> = mutableSetOf()
     val arcs: MutableSet<Arc> = mutableSetOf()
 
-    val switchToPlaceMap: MutableMap<Int, Place> = mutableMapOf()
+    val switchToTopologyPlaceMap: MutableMap<Int, Place> = mutableMapOf()
     val switchToUnvisitedPlaceMap: MutableMap<Int, Place> = mutableMapOf()
+    val topologySwitchToIncomingTransition: MutableMap<Int, Transition> = mutableMapOf()
     val edgeToTransitionMap: MutableMap<Edge, Transition> = mutableMapOf()
 
     val initialNode = usm.reachability.initialNode
     val finalNode = usm.reachability.finalNode
-
-    // Constants used for consistent naming
-    val topologyPrefix = "TOPOLOGY"
-    val updatePrefix = "UPDATE"
-    val switchPrefix = "SWITCH"
 
     // TODO: We do not consider undefinity at all, and that is probably fine
 
@@ -42,7 +43,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
         val p = Place(0, "${topologyPrefix}_P_$s")
         val pUnvisited = Place(2, "${topologyPrefix}_UV_$s")
 
-        switchToPlaceMap[s] = p
+        switchToTopologyPlaceMap[s] = p
         switchToUnvisitedPlaceMap[s] = pUnvisited
 
         places.add(p)
@@ -56,7 +57,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
         edgeToTransitionMap[edge] = t
 
         // Add arc from place to transition
-        val place: Place? = switchToPlaceMap[edge.source]
+        val place: Place? = switchToTopologyPlaceMap[edge.source]
         assert(place != null)
         arcs.add(Arc(place!!, t, 1))
 
@@ -66,7 +67,8 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
         arcs.add(Arc(uPlace!!, t, 1))
 
         // Add arc from transition to target node
-        val tPlace: Place? = switchToPlaceMap[edge.target]
+        val tPlace: Place? = switchToTopologyPlaceMap[edge.target]
+        topologySwitchToIncomingTransition[edge.target] = t
         assert(tPlace != null)
         arcs.add(Arc(t, tPlace!!, 1))
     }
@@ -141,7 +143,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     val tInject = Transition(false, "PACKET_INJECT_T")
     transitions.add(tInject)
     arcs.add(Arc(pUpdating, tInject, 1))
-    arcs.add(Arc(tInject, switchToPlaceMap[initialNode]!!, 1))
+    arcs.add(Arc(tInject, switchToTopologyPlaceMap[initialNode]!!, 1))
     arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
 
     // Generate the query
@@ -150,7 +152,85 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel):
     val switchNames = updatableSwitches.map { "${switchPrefix}_P_${it}_FINAL" }
     queryPath.toFile().writeText(generateQuery(finalName, switchNames))
 
+    // NFA
+    // First we translate the NFA into a Petri Game
+    val (nfaPetriGame, nfaStateToPlaceMap, nfaActionToTransitionMap) = policyNFA.toPetriGame()
+
+    // Add all information from nfa petri to this full petri
+    places.addAll(nfaPetriGame.places)
+    transitions.addAll(nfaPetriGame.transitions)
+    arcs.addAll(nfaPetriGame.arcs)
+
+    // NFA tracking component
+    val turnSwitch = Place(1, "${nfaPrefix}_TURN").apply { places.add(this) }
+    val switchTrackers = mutableMapOf<String, Place>()
+    for (a in policyNFA.actions) {
+        val trackPlace = Place(0, "${nfaPrefix}_TRACK_Pswitch${a.label}")
+        val nfaSwitchTransition = nfaActionToTransitionMap[a]!!
+        val topologySwitchToTransition = topologySwitchToIncomingTransition[a.label.toInt()]
+        switchTrackers[a.label] = trackPlace
+
+        arcs.add(Arc(trackPlace, nfaSwitchTransition))
+
+        if (topologySwitchToTransition == null)
+            continue
+        arcs.add(Arc(topologySwitchToTransition, trackPlace))
+    }
+
+    arcs.add(Arc(turnSwitch, tInject))
+    // Handle initial state in NFA
+    // Add arc from tInject to initial place from NFA
+    arcs.add(Arc(tInject, nfaStateToPlaceMap[policyNFA.initialState]!!))
+    arcs.add(Arc(tInject, switchTrackers[usm.reachability.initialNode.toString()]!!))
+
+    val initialSwitchTransitions = policyNFA.outgoing(policyNFA.initialState!!)
+        .filter { it.label == usm.reachability.initialNode.toString() }.map { nfaActionToTransitionMap[it]!! }
+
+    for (t in initialSwitchTransitions) {
+        arcs.add(Arc(switchTrackers[usm.reachability.initialNode.toString()]!!, t))
+    }
+
+    // Arcs from turn place to topology transitions
+    for (t in topologySwitchToIncomingTransition.values)
+        arcs.add(Arc(turnSwitch, t))
+
+    // Arcs from NFA transitions to turn place
+    nfaPetriGame.transitions.filter { nfaActionToTransitionMap.values.contains(it) }
+
+    for (t in nfaPetriGame.transitions) {
+        val resultingActions = nfaActionToTransitionMap.filter { (key, value) ->  value == t && key !is EpsilonAction }.keys
+
+        assert(resultingActions.size < 2)
+        if (resultingActions.size == 1)
+            arcs.add(Arc(t, turnSwitch))
+    }
+
+    places.addAll(switchTrackers.values)
+
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath)
+}
+
+data class NFAToPetriGame(val petriGame: PetriGame,
+                          val stateToPlaceMap: Map<State, Place>,
+                          val actionToTransitionMap: Map<Action, Transition>)
+
+fun NFA.toPetriGame(): NFAToPetriGame {
+    val arcs: MutableSet<Arc> = mutableSetOf()
+    val stateToPlaceMap = states.associateWith { Place(0, "${nfaPrefix}_Pstate_${it.name}") }
+    var i = 0
+    val actionToTransitionMap = actions.associateWith {
+        if (it is EpsilonAction)
+            Transition(true, "${nfaPrefix}_T_EPS_${i++}")
+        else
+            Transition(true, "${nfaPrefix}_T${i++}_Switch${it.label}")
+    }
+
+    for (aToT in actionToTransitionMap) {
+        arcs.add(Arc(stateToPlaceMap[aToT.key.from]!!, aToT.value))
+        arcs.add(Arc(aToT.value, stateToPlaceMap[aToT.key.to]!!))
+    }
+
+    return NFAToPetriGame(PetriGame(stateToPlaceMap.values.toSet(), actionToTransitionMap.values.toSet(), arcs.toSet()), stateToPlaceMap, actionToTransitionMap)
 }
 
 fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {

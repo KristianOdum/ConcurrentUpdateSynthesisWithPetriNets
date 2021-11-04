@@ -29,29 +29,57 @@ fun <T> timeFun(f: () -> T): Pair<T, Long> {
 }
 
 fun runProblem() {
-    val jsonText = Options.testCase.readText()
+    var time: Long = measureTimeMillis {
+        val jsonText = Options.testCase.readText()
 
-    val usm = updateSynthesisModelFromJsonText(jsonText)
-    println("Switches: ${usm.switches.size}")
+        val usm = updateSynthesisModelFromJsonText(jsonText)
 
-    val nfa = generateNFAFromUSMProperties(usm)
-    if (Options.drawGraphs) nfa.toGraphviz("nfa")
-    nfa.prune()
-    if (Options.drawGraphs) nfa.toGraphviz("nfa_pruned")
-    if (Options.drawGraphs) outputPrettyNetwork(usm)
+        val nfa: NFA
+        val nfaPetri: PetriGame
 
-    println("Converting to PN model...")
-    val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm)
-    println("Places: ${petriGame.places.size}")
-    println("Transitions: ${petriGame.transitions.size}")
-    println("Arcs: ${petriGame.arcs.size}")
+        var time: Long = measureTimeMillis {
+            nfa = generateNFAFromUSMProperties(usm)
+            if (Options.drawGraphs) nfa.toGraphviz("nfa")
+            nfa.prune()
+            if (Options.drawGraphs) nfa.toGraphviz("nfa_pruned")
+            if (Options.drawGraphs) outputPrettyNetwork(usm)
+        }
 
-    //addGraphicCoordinatesToPG(petriGame)
-    val modelPath = kotlin.io.path.createTempFile("pnml_model")
-    generatePnmlFileFromPetriGame(petriGame, modelPath)
+        outputPrettyNetwork(usm)
 
-    val verifier = Verifier(modelPath)
-    bisectionSearch(verifier, queryPath, usm.switches.size)
+        println("Problem file: ${Options.testCase}")
+
+        println()
+        println("NFA generation time: ${time / 1000.0} seconds")
+        println("NFA states: ${nfa.states.size}")
+        println("NFA transitions: ${nfa.actions.size}")
+        println()
+
+        println("Converting to PN model...")
+        println("Petri game switches: ${usm.switches.size}")
+        val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
+        generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of("petriwithnfa.pnml"))
+        println("Petri game places: ${petriGame.places.size}")
+        println("Petri game transitions: ${petriGame.transitions.size}")
+        println("Petri game arcs: ${petriGame.arcs.size}")
+
+        //addGraphicCoordinatesToPG(petriGame)
+        val modelPath = kotlin.io.path.createTempFile("pnml_model")
+        generatePnmlFileFromPetriGame(petriGame, modelPath)
+
+        val verifier: Verifier
+
+        time = measureTimeMillis {
+            verifier = Verifier(modelPath)
+            bisectionSearch(verifier, queryPath, usm.switches.size)
+        }
+
+        println()
+        println()
+        println("Total verification time: ${time / 1000.0} seconds")
+        println()
+    }
+    println("Total program runtime: ${time / 1000.0} seconds")
 }
 
 object Options {

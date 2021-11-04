@@ -25,6 +25,11 @@ class NFA(val states: MutableSet<State> = mutableSetOf(), val actions: MutableSe
         return this
     }
 
+    fun setStatesByActions() {
+        states.clear()
+        states.addAll(actions.fold(mutableSetOf()) { acc, action -> acc.apply { add(action.from); add(action.to) } })
+    }
+
     fun addState(s: State): NFA {
         states += s
         return this
@@ -33,6 +38,10 @@ class NFA(val states: MutableSet<State> = mutableSetOf(), val actions: MutableSe
     fun copy(): NFA {
         return NFA(states.toMutableSet(), actions.toMutableSet())
     }
+
+    fun outgoing(s: State) = actions.filter { it.from == s }
+
+    fun ingoing(s: State) = actions.filter { it.to == s }
 }
 
 
@@ -53,6 +62,8 @@ open class Action(val from: State, val label: String, val to: State) {
         result = 31 * result + to.hashCode()
         return result
     }
+
+    override fun toString(): String = from.name + "  -${label}->  " + to.name
 }
 
 class EpsilonAction(from: State, to: State) : Action(from, "eps", to) {
@@ -65,6 +76,10 @@ class EpsilonAction(from: State, to: State) : Action(from, "eps", to) {
         var result = from.hashCode()
         result = 31 * result + to.hashCode()
         return result
+    }
+
+    override fun toString(): String {
+        return super.toString() + "  EPSILON"
     }
 }
 
@@ -79,6 +94,8 @@ class State(val name: String, val type: StateType = StateType.NORMAL) {
         result = 31 * result + type.hashCode()
         return result
     }
+
+    override fun toString(): String = "${name},   " + type.name
 }
 
 enum class StateType {
@@ -91,7 +108,7 @@ fun generateNFAFromUSMProperties(usm: UpdateSynthesisModel): NFA {
 
     // NFA for waypoint
     val waypoints = waypointNFAs(usm)
-    val combinedWaypointNFA = waypoints.reduce() { acc:NFA, it: NFA -> acc intersect it }
+    val combinedWaypointNFA = waypoints.reduce { acc:NFA, it: NFA -> acc intersect it }
     combinedWaypointNFA.export("WaypointsNFA")
 
     // Intersect the reachability NFA with the waypoints
@@ -126,6 +143,7 @@ fun waypointNFAs(usm: UpdateSynthesisModel): Set<NFA> {
         }
 
         nfa.addAction(Action(sI, w.toString(), sJ))
+        nfa.addAction(Action(sJ, w.toString(), sJ))
 
         res.add(nfa)
     }
@@ -177,7 +195,10 @@ infix fun NFA.intersect(other: NFA): NFA {
         }
     }
 
-    return NFA().apply { newActions.forEach { this.addAction(it) } }
+    val res = NFA()
+    res.actions.addAll(newActions)
+    res.setStatesByActions()
+    return res
 }
 
 fun NFA.prune() {
@@ -211,7 +232,7 @@ fun NFA.pruneByDirection(forward: Boolean) {
     }
 
     actions.removeAll(actionsNotReached)
-    states.removeAll(actionsNotReached.map { it.from } union actionsNotReached.map { it.to })
+    this.setStatesByActions()
 }
 
 fun NFA.toGraphviz(path: String) {
@@ -242,10 +263,10 @@ fun NFA.toGraphviz(path: String) {
 
 fun NFA.export(path: String){
     var output = "States:"
-    output += states.map { it -> it.name }.joinToString(",")
+    output += states.joinToString(",") { it.name }
     output += "\nInitial state:${initialState!!.name}"
     output += "\nFinal states:"
-    output += finalStates.map { it -> it.name }.joinToString(",")
+    output += finalStates.joinToString(",") { it.name }
     output += "\nActions:"
     output += actions.joinToString(separator = ";") { "${it.from.name},${it.to.name},${it.label}" }
 
