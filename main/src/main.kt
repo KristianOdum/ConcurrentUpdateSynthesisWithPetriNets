@@ -51,7 +51,7 @@ fun runProblem() {
         println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
         val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
         generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of("petriwithnfa.pnml"))
-        println("Petri game switches: ${usm.switches.size} \nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
+        println("Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
                 "\nPetri game arcs: ${petriGame.arcs.size}")
 
         //addGraphicCoordinatesToPG(petriGame)
