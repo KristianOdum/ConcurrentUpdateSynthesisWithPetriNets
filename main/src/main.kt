@@ -1,13 +1,10 @@
-import Options.drawGraphs
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.cli.required
 import translate.*
 import verification.Verifier
 import verification.bisectionSearch
 import java.nio.file.Path
-import kotlin.io.path.Path
 import kotlin.io.path.readText
 import kotlin.system.measureTimeMillis
 
@@ -50,7 +47,10 @@ fun runProblem() {
         println("Problem file: ${Options.testCase}")
         println("NFA generation time: ${time / 1000.0} seconds, states: ${nfa.states.size}, transitions: ${nfa.actions.size}")
         val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
-        generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of("petriwithnfa.pnml"))
+        if (Options.debugPath != null) {
+            generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of(Options.debugPath!! + "_model.pnml"))
+            Path.of(Options.debugPath!! + "_query.q").toFile().writeText(queryPath.toFile().readText())
+        }
         println("Petri game switches: ${usm.switches.size}, places: ${petriGame.places.size}, transitions: ${petriGame.transitions.size}, arcs: ${petriGame.arcs.size}")
 
         //addGraphicCoordinatesToPG(petriGame)
@@ -79,6 +79,8 @@ object Options {
     val testCase: Path by lazy { Path.of(_testCase) }
     
     val drawGraphs by argParser.option(ArgType.Boolean, shortName = "g", description = "Draw graphs for various components").default(false)
+
+    val debugPath by argParser.option(ArgType.String, shortName = "d", fullName = "debugPrefix", description = "Output debugging files with the given prefix")
 }
 
 fun main(args: Array<String>) {
