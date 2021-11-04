@@ -16,7 +16,7 @@ const val topologyPrefix = "TOPOLOGY"
 const val updatePrefix = "UPDATE"
 const val switchPrefix = "SWITCH"
 
-data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path)
+data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path, val updateSwitchCount: Int)
 
 fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, policyNFA: NFA): PetriGameQueryPath {
     // Sets so duplicates cannot occur
@@ -207,7 +207,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
 
     places.addAll(switchTrackers.values)
 
-    return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath)
+    return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, updatableSwitches.count())
 }
 
 data class NFAToPetriGame(val petriGame: PetriGame,
