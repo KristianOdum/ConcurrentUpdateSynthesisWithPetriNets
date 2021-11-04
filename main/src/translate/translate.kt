@@ -150,7 +150,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     val queryPath = kotlin.io.path.createTempFile("query")
     val finalName = "${topologyPrefix}_UV_${finalNode}"
     val switchNames = updatableSwitches.map { "${switchPrefix}_P_${it}_FINAL" }
-    queryPath.toFile().writeText(generateQuery(finalName, switchNames))
+    queryPath.toFile().writeText(generateQuery(finalName, switchNames, updatableSwitches.count()))
 
     // NFA
     // First we translate the NFA into a Petri Game
@@ -346,8 +346,8 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
     return res
 }
 
-fun generateQuery(destination: String, switches: List<String>):  String{
-    var query = "AG (UPDATE_P_BATCHES <= 0 and (!deadlock or "
+fun generateQuery(destination: String, switches: List<String>, Count: Int):  String{
+    var query = "AG (UPDATE_P_BATCHES <= 0 and ${updatePrefix}_P_COUNT >= ${Count} and (!deadlock or "
     query += "$destination < 2 or (UPDATE_P_QUEUEING = 1"
     for (switch in switches){
         query += " and $switch = 1"
