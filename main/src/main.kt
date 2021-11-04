@@ -49,7 +49,7 @@ fun runProblem() {
 
         println("Problem file: ${Options.testCase}")
         println("NFA generation time: ${time / 1000.0} seconds, states: ${nfa.states.size}, transitions: ${nfa.actions.size}")
-        val (petriGame, queryPath) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
+        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
         generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of("petriwithnfa.pnml"))
         println("Petri game switches: ${usm.switches.size}, places: ${petriGame.places.size}, transitions: ${petriGame.transitions.size}, arcs: ${petriGame.arcs.size}")
 
@@ -61,7 +61,7 @@ fun runProblem() {
 
         time = measureTimeMillis {
             verifier = Verifier(modelPath)
-            bisectionSearch(verifier, queryPath, usm.switches.size)
+            bisectionSearch(verifier, queryPath, updateSwitchCount)
         }
 
         println("Total verification time: ${time / 1000.0} seconds")
