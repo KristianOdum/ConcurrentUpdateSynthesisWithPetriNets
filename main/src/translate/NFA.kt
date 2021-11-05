@@ -2,12 +2,49 @@ package translate
 
 import guru.nidi.graphviz.attribute.Attributes
 import guru.nidi.graphviz.engine.Format
+import guru.nidi.graphviz.engine.Renderer
 import guru.nidi.graphviz.graph
 import guru.nidi.graphviz.model.MutableGraph
 import guru.nidi.graphviz.toGraphviz
 import java.io.File
 
 class NFA(val states: MutableSet<State> = mutableSetOf(), val actions: MutableSet<Action> = mutableSetOf()) {
+    open class Action(val from: State, val label: Int, val to: State) {
+        override fun equals(other: Any?): Boolean =
+            other is Action
+                    && other.from == this.from
+                    && other.to == other.to
+                    && other.label == this.label
+
+        override fun hashCode(): Int {
+            var result = from.hashCode()
+            result = 31 * result + label.hashCode()
+            result = 31 * result + to.hashCode()
+            return result
+        }
+
+        override fun toString(): String = from.name + "  -${label}->  " + to.name
+    }
+
+    class State(val name: String, val type: StateType = StateType.NORMAL) {
+        override fun equals(other: Any?): Boolean =
+            other is State
+                    && other.name == this.name
+                    && other.type == this.type
+
+        override fun hashCode(): Int {
+            var result = name.hashCode()
+            result = 31 * result + type.hashCode()
+            return result
+        }
+
+        override fun toString(): String = "${name},   " + type.name
+    }
+
+    enum class StateType {
+        NORMAL, INITIAL, FINAL
+    }
+
     val initialState: State?
         get() = states.find { it.type == StateType.INITIAL }
 
@@ -45,62 +82,7 @@ class NFA(val states: MutableSet<State> = mutableSetOf(), val actions: MutableSe
 }
 
 
-open class Action(val from: State, val label: String, val to: State) {
-    init {
-        assert(label != "eps" || (label == "eps" && this is EpsilonAction))
-    }
 
-    override fun equals(other: Any?): Boolean =
-        other is Action
-                && other.from == this.from
-                && other.to == other.to
-                && other.label == this.label
-
-    override fun hashCode(): Int {
-        var result = from.hashCode()
-        result = 31 * result + label.hashCode()
-        result = 31 * result + to.hashCode()
-        return result
-    }
-
-    override fun toString(): String = from.name + "  -${label}->  " + to.name
-}
-
-class EpsilonAction(from: State, to: State) : Action(from, "eps", to) {
-    override fun equals(other: Any?): Boolean =
-        other is Action
-                && other.from == this.from
-                && other.to == other.to
-
-    override fun hashCode(): Int {
-        var result = from.hashCode()
-        result = 31 * result + to.hashCode()
-        return result
-    }
-
-    override fun toString(): String {
-        return super.toString() + "  EPSILON"
-    }
-}
-
-class State(val name: String, val type: StateType = StateType.NORMAL) {
-    override fun equals(other: Any?): Boolean =
-        other is State
-                && other.name == this.name
-                && other.type == this.type
-
-    override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + type.hashCode()
-        return result
-    }
-
-    override fun toString(): String = "${name},   " + type.name
-}
-
-enum class StateType {
-    NORMAL, INITIAL, FINAL
-}
 
 fun generateNFAFromUSMProperties(usm: UpdateSynthesisModel): NFA {
     // NFA for reachability
@@ -116,34 +98,34 @@ fun generateNFAFromUSMProperties(usm: UpdateSynthesisModel): NFA {
 }
 
 fun reachabilityNFA(usm: UpdateSynthesisModel): NFA {
-    val sI = State("1", StateType.INITIAL)
-    val sJ = State("2")
-    val sF = State("3", StateType.FINAL)
-    val nfa = NFA().addAction(Action(sI, usm.reachability.initialNode.toString(), sJ))
+    val sI = NFA.State("1", NFA.StateType.INITIAL)
+    val sJ = NFA.State("2")
+    val sF = NFA.State("3", NFA.StateType.FINAL)
+    val nfa = NFA().addAction(NFA.Action(sI, usm.reachability.initialNode, sJ))
         .apply {
             for (s in (usm.switches subtract setOf(usm.reachability.finalNode)))
-                addAction(Action(sJ, s.toString(), sJ))
+                addAction(NFA.Action(sJ, s, sJ))
         }
-        .addAction(Action(sJ, usm.reachability.finalNode.toString(), sF))
+        .addAction(NFA.Action(sJ, usm.reachability.finalNode, sF))
 
     return nfa
 }
 
 fun waypointNFAs(usm: UpdateSynthesisModel): Set<NFA> {
-    val sI = State("1", StateType.INITIAL)
-    val sJ = State("2", StateType.FINAL)
+    val sI = NFA.State("1", NFA.StateType.INITIAL)
+    val sJ = NFA.State("2", NFA.StateType.FINAL)
     val res = mutableSetOf<NFA>()
 
     for (w in usm.waypoint.waypoints) {
         val nfa = NFA()
 
         for (s in (usm.switches subtract setOf(w))) {
-            nfa.addAction(Action(sI, s.toString(), sI))
-            nfa.addAction(Action(sJ, s.toString(), sJ))
+            nfa.addAction(NFA.Action(sI, s, sI))
+            nfa.addAction(NFA.Action(sJ, s, sJ))
         }
 
-        nfa.addAction(Action(sI, w.toString(), sJ))
-        nfa.addAction(Action(sJ, w.toString(), sJ))
+        nfa.addAction(NFA.Action(sI, w, sJ))
+        nfa.addAction(NFA.Action(sJ, w, sJ))
 
         res.add(nfa)
     }
@@ -153,9 +135,9 @@ fun waypointNFAs(usm: UpdateSynthesisModel): Set<NFA> {
 
 infix fun NFA.intersect(other: NFA): NFA {
     val labels = (actions union other.actions).map { it.label }.toSet()
-    val newStatesByPair = mutableSetOf<Pair<State, State>>()
-    val newStateToState = mutableMapOf<Pair<State, State>, State>()
-    val newActions = mutableSetOf<Action>()
+    val newStatesByPair = mutableSetOf<Pair<NFA.State, NFA.State>>()
+    val newStateToState = mutableMapOf<Pair<NFA.State, NFA.State>, NFA.State>()
+    val newActions = mutableSetOf<NFA.Action>()
 
     // generate states of the intersection NFA
     var nextId = 0
@@ -164,15 +146,15 @@ infix fun NFA.intersect(other: NFA): NFA {
             newStatesByPair += Pair(s1, s2)
 
             val type = if (s1.type != s2.type)
-                StateType.NORMAL
-            else if (s1.type == StateType.FINAL && s2.type == StateType.FINAL)
-                StateType.FINAL
-            else if (s1.type == StateType.INITIAL && s2.type == StateType.INITIAL)
-                StateType.INITIAL
+                NFA.StateType.NORMAL
+            else if (s1.type == NFA.StateType.FINAL && s2.type == NFA.StateType.FINAL)
+                NFA.StateType.FINAL
+            else if (s1.type == NFA.StateType.INITIAL && s2.type == NFA.StateType.INITIAL)
+                NFA.StateType.INITIAL
             else
-                StateType.NORMAL
+                NFA.StateType.NORMAL
 
-            newStateToState[Pair(s1, s2)] = State((++nextId).toString(), type)
+            newStateToState[Pair(s1, s2)] = NFA.State((++nextId).toString(), type)
         }
     }
 
@@ -188,7 +170,7 @@ infix fun NFA.intersect(other: NFA): NFA {
                         val from = newStateToState[Pair(s1, s2)]!!
                         val to = newStateToState[Pair(a1.to, a2.to)]!!
 
-                        newActions += Action(from, l, to)
+                        newActions += NFA.Action(from, l, to)
                     }
                 }
             }
@@ -207,7 +189,7 @@ fun NFA.prune() {
 }
 
 fun NFA.pruneByDirection(forward: Boolean) {
-    val nextActions: MutableSet<Action> =
+    val nextActions: MutableSet<NFA.Action> =
         if (forward) {
             val sI = initialState
             if (sI != null)
@@ -235,13 +217,13 @@ fun NFA.pruneByDirection(forward: Boolean) {
     this.setStatesByActions()
 }
 
-fun NFA.toGraphviz(path: String) {
+fun NFA.toGraphviz(): Renderer {
     val graph: MutableGraph = graph(directed = true) {
         for (a in actions) {
             for (s in listOf(a.from, a.to)) {
-                if (s.type == StateType.FINAL)
+                if (s.type == NFA.StateType.FINAL)
                     s.name[Attributes.attrs(listOf(Attributes.attr("shape", "doublecircle")))]
-                else if (s.type == StateType.INITIAL)
+                else if (s.type == NFA.StateType.INITIAL)
                     s.name[Attributes.attrs(
                         listOf(
                             Attributes.attr("fillcolor", "gray"),
@@ -250,15 +232,10 @@ fun NFA.toGraphviz(path: String) {
                     )]
             }
 
-            if (a is EpsilonAction)
-                (a.from.name - a.to.name).add(Attributes.attr("label", "eps"))
-            else
-                (a.from.name - a.to.name).add(Attributes.attr("label", a.label))
+            (a.from.name - a.to.name).add(Attributes.attr("label", a.label))
         }
     }
-    if (Options.drawGraphs)
-        graph.toGraphviz().render(Format.PNG)
-            .toFile(File("graphics_out/" + if (path.endsWith(".png")) path else "$path.png"))
+    return graph.toGraphviz().render(Format.SVG)
 }
 
 fun NFA.export(path: String){

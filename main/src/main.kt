@@ -4,6 +4,7 @@ import kotlinx.cli.default
 import translate.*
 import verification.Verifier
 import verification.bisectionSearch
+import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.system.measureTimeMillis
@@ -12,7 +13,7 @@ import kotlin.system.measureTimeMillis
 fun printUsage() {
     println(
 """
-conupsyn <verifypn_engine_path> <testJson> 
+conupsyn <verifypn_engine_path> <testJson>
 """
     )
 }
@@ -36,9 +37,9 @@ fun runProblem() {
 
         var time: Long = measureTimeMillis {
             nfa = generateNFAFromUSMProperties(usm)
-            if (Options.drawGraphs) nfa.toGraphviz("nfa")
+            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("nfa.svg"))
             nfa.prune()
-            if (Options.drawGraphs) nfa.toGraphviz("nfa_pruned")
+            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("nfa_pruned.svg"))
             if (Options.drawGraphs) outputPrettyNetwork(usm)
         }
 

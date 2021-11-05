@@ -17,7 +17,7 @@ fun addGraphicCoordinatesToPG(pg: PetriGame) {
 
     // Graphviz creates a graph and the arcs determine the spacing
     val graph: MutableGraph = graph(directed = true) {
-        for (a: Arc in pg.arcs) {R
+        for (a: Arc in pg.arcs) {
             a.source.name - a.target.name
         }
     }
