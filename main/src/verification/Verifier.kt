@@ -2,18 +2,25 @@ package verification
 
 import Options
 import java.nio.file.Path
-import kotlin.math.floor
-import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
-import java.io.InputStream
 
 class Verifier(val modelPath: Path) {
     fun verifyQuery(queryPath: String): Boolean {
         val command = "${Options.enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0 -p"
+        if (Options.outputVerifyPN)
+            println(command)
         val pro = Runtime.getRuntime().exec(command)
         pro.waitFor()
         val output = pro.inputStream.readAllBytes().map { Char(it.toInt()) }.joinToString("")
-        return output.contains("is satisfied")
+        if (Options.outputVerifyPN)
+            println(output)
+
+        return if (output.contains("is satisfied"))
+            true
+        else if (output.contains("is NOT satisfied"))
+            false
+        else
+            throw Exception(pro.errorStream.readAllBytes().map { Char(it.toInt()) }.joinToString(""))
     }
 }
 

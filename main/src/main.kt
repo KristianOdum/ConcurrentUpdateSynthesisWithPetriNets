@@ -1,6 +1,7 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
+import kotlinx.cli.required
 import translate.*
 import verification.Verifier
 import verification.bisectionSearch
@@ -16,8 +17,6 @@ fun runProblem() {
         val usm = updateSynthesisModelFromJsonText(jsonText)
 
         val nfa: NFA
-        val nfaPetri: PetriGame
-
         var time: Long = measureTimeMillis {
             nfa = generateNFAFromUSMProperties(usm)
             if (Options.drawGraphs) nfa.toGraphviz().toFile(File("nfa.svg"))
@@ -41,6 +40,7 @@ fun runProblem() {
             )
             Path.of(Options.debugPath!! + "_query.q").toFile().writeText(queryPath.toFile().readText())
         }
+        generatePnmlFileFromPetriGame(petriGame, modelPath)
         println(
             "Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
                     "\nPetri game arcs: ${petriGame.arcs.size}"
@@ -100,6 +100,7 @@ object Options {
         description = "Output debugging files with the given prefix"
     )
 
+    val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
 fun main(args: Array<String>) {
