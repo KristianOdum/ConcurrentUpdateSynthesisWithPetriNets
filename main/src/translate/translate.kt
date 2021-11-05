@@ -146,12 +146,6 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     arcs.add(Arc(tInject, switchToTopologyPlaceMap[initialNode]!!, 1))
     arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
 
-    // Generate the query
-    val queryPath = kotlin.io.path.createTempFile("query")
-    val finalName = "${topologyPrefix}_UV_${finalNode}"
-    val switchNames = updatableSwitches.map { "${switchPrefix}_P_${it}_FINAL" }
-    queryPath.toFile().writeText(generateQuery(finalName, switchNames))
-
     // NFA
     // First we translate the NFA into a Petri Game
     val (nfaPetriGame, nfaStateToPlaceMap, nfaActionToTransitionMap) = policyNFA.toPetriGame()
@@ -207,6 +201,13 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
 
     places.addAll(switchTrackers.values)
 
+    // Generate the query
+    val queryPath = kotlin.io.path.createTempFile("query")
+    val switchNames = updatableSwitches.map { "${switchPrefix}_P_${it}_FINAL" }
+
+    val acceptingPlaces = nfaStateToPlaceMap.filterKeys { it.type == StateType.FINAL }.values.map { it.name }
+    queryPath.toFile().writeText(generateQuery(switchNames, acceptingPlaces))
+
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, updatableSwitches.count())
 }
 
@@ -229,6 +230,8 @@ fun NFA.toPetriGame(): NFAToPetriGame {
         arcs.add(Arc(stateToPlaceMap[aToT.key.from]!!, aToT.value))
         arcs.add(Arc(aToT.value, stateToPlaceMap[aToT.key.to]!!))
     }
+
+
 
     return NFAToPetriGame(PetriGame(stateToPlaceMap.values.toSet(), actionToTransitionMap.values.toSet(), arcs.toSet()), stateToPlaceMap, actionToTransitionMap)
 }
@@ -346,11 +349,16 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
     return res
 }
 
-fun generateQuery(destination: String, switches: List<String>):  String{
+fun generateQuery(switches: List<String>, acceptingStates: List<String>):  String{
     var query = "AG (UPDATE_P_BATCHES <= 0 and (!deadlock or "
-    query += "$destination < 2 or (UPDATE_P_QUEUEING = 1"
+    query += "(UPDATE_P_QUEUEING = 1"
     for (switch in switches){
         query += " and $switch = 1"
+    }
+    query += ") or ("
+    query += "${acceptingStates[0]} = 1"
+    for (state in acceptingStates.drop(1)){
+        query += " or $state = 1"
     }
     query += ")))"
     return query
