@@ -44,28 +44,29 @@ fun runProblem() {
             if (Options.drawGraphs) nfa.toGraphviz("nfa_pruned")
             if (Options.drawGraphs) outputPrettyNetwork(usm)
         }
+        if(!Options.onlyNFAGen){
+            outputPrettyNetwork(usm)
 
-        outputPrettyNetwork(usm)
+            println("Problem file: ${Options.testCase}")
+            println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
+            val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
+            generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of("petriwithnfa.pnml"))
+            println("Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
+                    "\nPetri game arcs: ${petriGame.arcs.size}")
 
-        println("Problem file: ${Options.testCase}")
-        println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
-        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
-        generatePnmlFileFromPetriGame(petriGame.apply { addGraphicCoordinatesToPG(this) }, Path.of("petriwithnfa.pnml"))
-        println("Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
-                "\nPetri game arcs: ${petriGame.arcs.size}")
+            //addGraphicCoordinatesToPG(petriGame)
+            val modelPath = kotlin.io.path.createTempFile("pnml_model")
+            generatePnmlFileFromPetriGame(petriGame, modelPath)
 
-        //addGraphicCoordinatesToPG(petriGame)
-        val modelPath = kotlin.io.path.createTempFile("pnml_model")
-        generatePnmlFileFromPetriGame(petriGame, modelPath)
+            val verifier: Verifier
 
-        val verifier: Verifier
+            time = measureTimeMillis {
+                verifier = Verifier(modelPath)
+                bisectionSearch(verifier, queryPath, updateSwitchCount)
+            }
 
-        time = measureTimeMillis {
-            verifier = Verifier(modelPath)
-            bisectionSearch(verifier, queryPath, updateSwitchCount)
+            println("Total verification time: ${time / 1000.0} seconds")
         }
-
-        println("Total verification time: ${time / 1000.0} seconds")
     }
     println("Total program runtime: ${time / 1000.0} seconds")
 }
@@ -80,6 +81,8 @@ object Options {
     val testCase: Path by lazy { Path.of(_testCase) }
     
     val drawGraphs by argParser.option(ArgType.Boolean, shortName = "g", description = "Draw graphs for various components").default(false)
+
+    val onlyNFAGen by argParser.option(ArgType.Boolean, shortName = "onlynfa", description = "Only does the NFA translation, nothing more").default(false)
 }
 
 fun main(args: Array<String>) {
