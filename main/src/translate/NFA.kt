@@ -104,18 +104,21 @@ enum class StateType {
 
 fun generateNFAFromUSMProperties(usm: UpdateSynthesisModel): NFA {
     // NFA for reachability
-    val reachabilityNFA = reachabilityNFA(usm)
+    val reachabilityNFA = genReachabilityNFA(usm)
 
     // NFA for waypoint
-    val waypoints = waypointNFAs(usm)
-    val combinedWaypointNFA = waypoints.reduce { acc:NFA, it: NFA -> acc intersect it }
-    combinedWaypointNFA.export("WaypointsNFA")
+    val combinedWaypointNFA = genCombinedWaypointNFA(usm)
 
     // Intersect the reachability NFA with the waypoints
     return combinedWaypointNFA intersect reachabilityNFA
 }
 
-fun reachabilityNFA(usm: UpdateSynthesisModel): NFA {
+fun genCombinedWaypointNFA(usm: UpdateSynthesisModel): NFA{
+    val waypoints = waypointNFAs(usm)
+    return waypoints.reduce { acc:NFA, it: NFA -> acc intersect it }
+}
+
+fun genReachabilityNFA(usm: UpdateSynthesisModel): NFA {
     val sI = State("1", StateType.INITIAL)
     val sJ = State("2")
     val sF = State("3", StateType.FINAL)
