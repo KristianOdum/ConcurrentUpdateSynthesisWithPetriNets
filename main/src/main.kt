@@ -63,7 +63,7 @@ fun generateNFA(){
     val jsonText = Options.testCase.readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
     val combinedWaypointNFA = genCombinedWaypointNFA(usm)
-    combinedWaypointNFA.export("WaypointsNFA")
+    combinedWaypointNFA.export(Options.onlyNFAGen!!)
     println("Waypoint NFA successfully generated!")
 }
 
@@ -88,10 +88,10 @@ object Options {
 
 
     val onlyNFAGen by argParser.option(
-        ArgType.Boolean,
+        ArgType.String,
         shortName = "onlynfa",
         description = "Only does the NFA translation, nothing more"
-    ).default(false)
+    )
 
     val debugPath by argParser.option(
         ArgType.String,
@@ -105,6 +105,6 @@ object Options {
 
 fun main(args: Array<String>) {
     Options.argParser.parse(args)
-    if(Options.onlyNFAGen) generateNFA()
+    if (Options.onlyNFAGen != null) generateNFA()
     else runProblem()
 }

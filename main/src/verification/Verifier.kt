@@ -6,7 +6,7 @@ import kotlin.system.measureTimeMillis
 
 class Verifier(val modelPath: Path) {
     fun verifyQuery(queryPath: String): Boolean {
-        val command = "${Options.enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0 -p"
+        val command = "${Options.enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0"
         if (Options.outputVerifyPN)
             println(command)
         val pro = Runtime.getRuntime().exec(command)
@@ -19,8 +19,10 @@ class Verifier(val modelPath: Path) {
             true
         else if (output.contains("is NOT satisfied"))
             false
-        else
-            throw Exception(pro.errorStream.readAllBytes().map { Char(it.toInt()) }.joinToString(""))
+        else {
+            println(pro.errorStream.readAllBytes().map { Char(it.toInt()) }.joinToString(""))
+            throw Exception()
+        }
     }
 }
 
