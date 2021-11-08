@@ -77,8 +77,8 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
             .map { it.source }).toSet()
 
     // Update State Component
-    val pQueueing = Place(1, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
-    val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
+    val pQueueing = Place(0, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
+    val pUpdating = Place(1, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
     val pInvCount = Place(updatableSwitches.count(), "${updatePrefix}_P_INVCOUNT").apply { places.add(this) }
     val pCount = Place(0, "${updatePrefix}_P_COUNT").apply { places.add(this) }

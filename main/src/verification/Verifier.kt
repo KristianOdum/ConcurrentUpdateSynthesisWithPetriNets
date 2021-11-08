@@ -25,7 +25,6 @@ class Verifier(val modelPath: Path) {
 }
 
 fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
-
     var batches = 0
     var start = 1
     var end = upperBound

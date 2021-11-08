@@ -43,7 +43,7 @@ fun runProblem() {
         generatePnmlFileFromPetriGame(petriGame, modelPath)
         println(
             "Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
-                    "\nPetri game arcs: ${petriGame.arcs.size}"
+                    "\nPetri game arcs: ${petriGame.arcs.size}\nPetri game initial markings: ${petriGame.places.sumOf { it.initialMarkings }}"
         )
 
         val verifier: Verifier
