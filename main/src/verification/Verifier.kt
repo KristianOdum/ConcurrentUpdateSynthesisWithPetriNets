@@ -51,12 +51,13 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
             verified = verifier.verifyQuery(tempQueryFile.path)
         }
 
+        print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $mid batches\n")
+
+        // If fails with 5 batches but succeeds with max batches we break and
         if((mid == 5) and (verified == false)){
             flag = false
             break
         }
-
-        print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $mid batches\n")
 
         if (verified) {
             batches = mid
