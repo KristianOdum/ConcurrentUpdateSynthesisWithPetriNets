@@ -70,6 +70,42 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
         arcs.add(Arc(t, tPlace!!, 1))
     }
 
+    println(usm.initialRouting)
+    println(usm.finalRouting)
+
+    val initialRoutingList = usm.initialRouting.let { Edges -> Edges.map { it.source } }.distinct()
+
+    println(initialRoutingList)
+
+    val finalRoutingList = usm.finalRouting.let { Edges -> Edges.map { it.source } }.distinct()
+
+    println(finalRoutingList)
+
+    println()
+    val finalUpdateEqList: MutableSet<Set<Edge>> = mutableSetOf()
+
+    val eqBatch: MutableSet<Edge> = mutableSetOf()
+
+    for((i, value) in usm.finalRouting.withIndex()){
+        if(initialRoutingList.contains(value.source)!=true){
+            eqBatch.add(value)
+        }
+
+        if(initialRoutingList.contains(value.source)==true){
+            if(eqBatch.isEmpty() != true){
+                eqBatch.toSet()
+                finalUpdateEqList.add(eqBatch)
+                println(finalUpdateEqList)
+            }
+            eqBatch.clear()
+            println(finalUpdateEqList)
+        }
+    }
+
+    println(finalUpdateEqList)
+
+
+    println()
     // Switch Components
     // Find u \in V where R^i(u) != R^f(u) // TODO: This can be optimized by finding iEdge and fEdge simultaneously
     val updatableSwitches: Set<Int> = (
