@@ -100,6 +100,13 @@ object Options {
         description = "Output debugging files with the given prefix"
     )
 
+    val maxSwicthesInBatch by argParser.option(
+        ArgType.Int,
+        shortName = "sb",
+        fullName = "switches_in_batch",
+        description = "The maximum number of switches that can be in a batch. 0 = No limit"
+    ).default(0)
+
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
