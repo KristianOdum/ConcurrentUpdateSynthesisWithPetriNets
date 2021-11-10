@@ -43,7 +43,7 @@ fun runProblem() {
         generatePnmlFileFromPetriGame(petriGame, modelPath)
         println(
             "Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
-                    "\nPetri game arcs: ${petriGame.arcs.size}"
+                    "\nPetri game arcs: ${petriGame.arcs.size}\nPetri game initial markings: ${petriGame.places.sumOf { it.initialMarkings }}"
         )
 
         val verifier: Verifier
@@ -99,6 +99,13 @@ object Options {
         fullName = "debugPrefix",
         description = "Output debugging files with the given prefix"
     )
+
+    val maxSwicthesInBatch by argParser.option(
+        ArgType.Int,
+        shortName = "sb",
+        fullName = "switches_in_batch",
+        description = "The maximum number of switches that can be in a batch. 0 = No limit"
+    ).default(0)
 
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }

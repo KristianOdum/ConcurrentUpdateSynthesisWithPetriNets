@@ -2,6 +2,8 @@ package verification
 
 import Options
 import java.nio.file.Path
+import kotlin.math.floor
+import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
 class Verifier(val modelPath: Path) {
@@ -27,7 +29,6 @@ class Verifier(val modelPath: Path) {
 }
 
 fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
-
     var batches = 0
     var start = 1
     var end = upperBound
@@ -54,6 +55,12 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
 
         print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $mid batches\n")
 
+        // If fails with 5 batches but succeeds with max batches we break and
+        if((mid == 5) and (verified == false)){
+            flag = false
+            break
+        }
+
         if (verified) {
             batches = mid
             end = mid - 1
@@ -72,6 +79,30 @@ fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
             flag = true
         } else {
             mid -= 1
+        }
+    }
+
+    end = upperBound
+
+    // If verification succeeds with max batches but not with 5 or lower, proceed with binary search
+    if(!flag) {
+        while (start <= end) {
+            mid = floor((start + end) / 2.0).roundToInt()
+            query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $mid")
+
+            tempQueryFile.writeText(query)
+
+            time = measureTimeMillis {
+                verified = verifier.verifyQuery(tempQueryFile.path)
+            }
+            print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $mid batches\n")
+
+            if (verified) {
+                batches = mid
+                end = mid - 1
+            } else {
+                start = mid + 1
+            }
         }
     }
 
