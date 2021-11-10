@@ -51,7 +51,7 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
         } else if(upperBound == 5){
             case = 4
         } else{
-            case = upperBound
+            case = upperBound - 1
         }
         // Test with 5 or less
         while (case > 0)
