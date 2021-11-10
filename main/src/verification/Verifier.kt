@@ -26,14 +26,13 @@ class Verifier(val modelPath: Path) {
     }
 }
 
-fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
+fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
     var batches = 0
     var case: Int
 
     var verified: Boolean
     var query = queryPath.toFile().readText()
     val tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
-    var flag: Boolean = false
     var time: Long
 
     // Test with max amount of batches

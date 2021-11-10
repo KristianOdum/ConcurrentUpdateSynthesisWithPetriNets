@@ -1,10 +1,9 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.cli.required
 import translate.*
 import verification.Verifier
-import verification.bisectionSearch
+import verification.sequentialSearch
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.readText
@@ -50,7 +49,7 @@ fun runProblem() {
 
         time = measureTimeMillis {
             verifier = Verifier(modelPath)
-            bisectionSearch(verifier, queryPath, updateSwitchCount)
+            sequentialSearch(verifier, queryPath, updateSwitchCount)
         }
 
         println("Total verification time: ${time / 1000.0} seconds")
