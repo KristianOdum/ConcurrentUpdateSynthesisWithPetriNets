@@ -28,81 +28,80 @@ class Verifier(val modelPath: Path) {
 
 fun bisectionSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
     var batches = 0
-    var start = 1
-    var end = upperBound
-    var mid: Int
-    var flag: Boolean = false
+    var case: Int
 
     var verified: Boolean
     var query = queryPath.toFile().readText()
     val tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
-
+    var flag: Boolean = false
     var time: Long
 
-    // Used to check if it is at all possible so update with max number of batches
-    mid = end
-
-    while (start <= end) {
-        query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $mid")
-
-        tempQueryFile.writeText(query)
-
-        time = measureTimeMillis {
-            verified = verifier.verifyQuery(tempQueryFile.path)
-        }
-
-        print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $mid batches\n")
-
-        // If fails with 5 batches but succeeds with max batches we break and
-        if((mid == 5) and (verified == false)){
-            flag = false
-            break
-        }
-
-        if (verified) {
-            batches = mid
-            end = mid - 1
-        } else {
-            start = mid + 1
-        }
-
-        // Goes sequentially down from 5 batches
-        if (!flag) {
-            if(end < 5){
-                mid = end
-            }
-            else{
-                mid = 5
-            }
-            flag = true
-        } else {
-            mid -= 1
-        }
+    // Test with max amount of batches
+    query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $upperBound")
+    tempQueryFile.writeText(query)
+    time = measureTimeMillis {
+        verified = verifier.verifyQuery(tempQueryFile.path)
     }
+    print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $upperBound batches\n")
 
-    end = upperBound
+    if(verified){
+        batches = upperBound
 
-    // If verification succeeds with max batches but not with 5 or lower, proceed with binary search
-    if(!flag) {
-        while (start <= end) {
-            mid = floor((start + end) / 2.0).roundToInt()
-            query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $mid")
+        if(upperBound > 5){
+            case = 5
+        } else if(upperBound == 5){
+            case = 4
+        } else{
+            case = upperBound
+        }
+        // Test with 5 or less
+        while (case > 0)
+        {
+            query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $case")
 
             tempQueryFile.writeText(query)
 
             time = measureTimeMillis {
                 verified = verifier.verifyQuery(tempQueryFile.path)
             }
-            print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $mid batches\n")
+
+            print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches\n")
 
             if (verified) {
-                batches = mid
-                end = mid - 1
-            } else {
-                start = mid + 1
+                batches = case
+                case -= 1
+            } else if(!verified and (case == 5)) {
+                case = upperBound - 1
+                break
+            } else if(!verified){
+                break
+            }
+        }
+        //Test sequentially down from max batches
+        if(!verified){
+            while (case > 5){
+                query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $case")
+
+                tempQueryFile.writeText(query)
+
+                time = measureTimeMillis {
+                    verified = verifier.verifyQuery(tempQueryFile.path)
+                }
+
+                print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches\n")
+
+                if (verified) {
+                    batches = case
+                    case -= 1
+                }
+                if (!verified) {
+                    break
+                }
             }
         }
     }
+
+
 
     if (batches == 0)
         println("Could not satisfy the query with any number of batches!")
