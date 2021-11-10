@@ -9,6 +9,23 @@ import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.system.measureTimeMillis
 
+data class CUSP(
+    val initialSwitches: Set<Int>,
+    val finalSwitches: Set<Int>,
+    val initialRouting: Map<Int, Set<Int>>,
+    val finalRouting: Map<Int, Set<Int>>,
+    val policy: NFA
+    )
+
+fun generateCUSPFromUSM(usm: UpdateSynthesisModel, nfa: NFA) =
+    CUSP(
+        setOf(usm.reachability.initialNode),
+        setOf(usm.reachability.finalNode),
+        usm.initialRouting.map { Pair(it.source, setOf(it.target)) }.toMap(),
+        usm.finalRouting.map { Pair(it.source, setOf(it.target)) }.toMap(),
+        nfa
+    )
+
 fun runProblem() {
     var time: Long = measureTimeMillis {
         val jsonText = Options.testCase.readText()
