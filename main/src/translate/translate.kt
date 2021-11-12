@@ -82,7 +82,9 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     println(finalRoutingList)
 
     println()
-    val finalUpdateEqList: MutableSet<Set<Int>> = mutableSetOf()
+    val finalEqList: MutableSet<Set<Int>> = mutableSetOf()
+
+    val initialEqList: MutableSet<Set<Int>> = mutableSetOf()
 
     val eqBatch: MutableSet<Int> = mutableSetOf()
 
@@ -94,30 +96,53 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
         if(initialRoutingList.contains(value.target)==true){
             if(eqBatch.size > 1){
                 val items = eqBatch.toSet()
-                finalUpdateEqList.add(items)
-                println(finalUpdateEqList)
+                finalEqList.add(items)
+                println(finalEqList)
             }
             eqBatch.clear()
-            println(finalUpdateEqList)
+            println(finalEqList)
+        }
+    }
+
+    for(value in usm.initialRouting){
+        if(finalRoutingList.contains(value.target)!=true){
+            eqBatch.add(value.target)
+        }
+
+        if(finalRoutingList.contains(value.target)==true){
+            if(eqBatch.size > 1){
+                val items = eqBatch.toSet()
+                initialEqList.add(items)
+            }
+            eqBatch.clear()
+            println(initialEqList)
         }
     }
 
 
+    println()
+    println()
+    println()
 
-    println(finalUpdateEqList)
+    println(finalEqList)
+    println(initialEqList)
 
-
+    println()
+    println()
+    println()
     println()
     // Switch Components
     // Find u \in V where R^i(u) != R^f(u) // TODO: This can be optimized by finding iEdge and fEdge simultaneously
     var updatableSwitches: Set<Int> = (
             ((usm.initialRouting union usm.finalRouting) subtract (usm.initialRouting intersect usm.finalRouting))
             .map { it.source }).toSet()
-    println(updatableSwitches)
-    for (i in finalUpdateEqList){
+    for (i in finalEqList){
         updatableSwitches = updatableSwitches.subtract(i)
     }
-    println(updatableSwitches)
+    for (i in initialEqList){
+        updatableSwitches = updatableSwitches.subtract(i)
+    }
+
 
     // Update State Component
     val pQueueing = Place(0, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
@@ -176,11 +201,51 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
         }
     }
 
-    for (updateBatch in finalUpdateEqList) {
+    for (updateBatch in finalEqList) {
         val fEdge: MutableSet<Edge> = mutableSetOf()
         for (i in updateBatch){
             val item = usm.finalRouting.find { it.source == i }
             fEdge.add(item!!)
+        }
+
+
+        // Make sure the initial edge is different to its final correspondent
+        val pInit = Place(0, "${switchPrefix}_P_${updateBatch.toString()}_INIT").apply { places.add(this) }
+        val pQueue = Place(1, "${switchPrefix}_P_${updateBatch.toString()}_QUEUE").apply { places.add(this) }
+        val pFinal = Place(0, "${switchPrefix}_P_${updateBatch.toString()}_FINAL").apply { places.add(this) }
+        val pLimiter = Place(0, "${switchPrefix}_P_${updateBatch.toString()}_LIMITER").apply { places.add(this) }
+        val tQueue = Transition(true, "${switchPrefix}_T_${updateBatch.toString()}_QUEUE").apply { transitions.add(this) }
+        val tUpdate = Transition(false, "${switchPrefix}_T_${updateBatch.toString()}_UPDATE").apply { transitions.add(this) }
+
+        arcs.add(Arc(tQueue, pCount, 1))
+        arcs.add(Arc(pCount, tUpdate, 1))
+        arcs.add(Arc(pInit, tQueue, 1))
+        arcs.add(Arc(tQueue, pInit, 1))
+        arcs.add(Arc(pLimiter, tQueue, 1))
+        arcs.add(Arc(tQueue, pQueue, 1))
+        arcs.add(Arc(pInit, tUpdate, 1))
+        arcs.add(Arc(pQueue, tUpdate, 1))
+        arcs.add(Arc(tUpdate, pFinal, 1))
+        arcs.add(Arc(pInvCount, tQueue, 1,))
+        arcs.add(Arc(tQueue, pQueueing, 1))
+        arcs.add(Arc(pQueueing, tQueue, 1))
+        arcs.add(Arc(pUpdating, tUpdate, 1))
+        arcs.add(Arc(tUpdate, pUpdating, 1))
+        arcs.add(Arc(tUpdate, pInvCount, 1))
+
+        for (i in fEdge){
+            if (i != null) {
+                arcs.add(Arc(pFinal, edgeToTopologyTransitionMap[i]!!, 1))
+                arcs.add(Arc(edgeToTopologyTransitionMap[i]!!, pFinal, 1))
+            }
+        }
+    }
+
+    for (updateBatch in initialEqList) {
+        val iEdge: MutableSet<Edge> = mutableSetOf()
+        for (i in updateBatch){
+            val item = usm.initialRouting.find { it.source == i }
+            iEdge.add(item!!)
         }
 
 
@@ -208,10 +273,10 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
         arcs.add(Arc(tUpdate, pUpdating, 1))
         arcs.add(Arc(tUpdate, pInvCount, 1))
 
-        for (i in fEdge){
+        for (i in iEdge){
             if (i != null) {
-                arcs.add(Arc(pFinal, edgeToTopologyTransitionMap[i]!!, 1))
-                arcs.add(Arc(edgeToTopologyTransitionMap[i]!!, pFinal, 1))
+                arcs.add(Arc(pInit, edgeToTopologyTransitionMap[i]!!, 1))
+                arcs.add(Arc(edgeToTopologyTransitionMap[i]!!, pInit, 1))
             }
         }
     }
