@@ -250,5 +250,5 @@ fun NFA.export(path: String){
     output += "\nActions:"
     output += actions.joinToString(separator = ";") { "${it.from.name},${it.to.name},${it.label}" }
 
-    File("${path}.txt").writeText(output)
+    File(path).writeText(output)
 }

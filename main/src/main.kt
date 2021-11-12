@@ -1,14 +1,53 @@
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import kotlinx.cli.required
 import translate.*
 import verification.Verifier
-import verification.bisectionSearch
+import verification.sequentialSearch
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.system.measureTimeMillis
+
+typealias Switch = Int
+
+data class CUSP(
+    val initialSwitches: Set<Switch>,
+    val finalSwitches: Set<Switch>,
+    val initialRouting: Map<Switch, Set<Switch>>,
+    val finalRouting: Map<Switch, Set<Switch>>,
+    val policy: NFA,
+) {
+    val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
+}
+
+data class CUSPT(
+    val initialSwitch: Switch,
+    val finalSwitch: Switch,
+    val initialRouting: Map<Switch, Set<Switch>>,
+    val finalRouting: Map<Switch, Set<Switch>>,
+    val policy: NFA,
+) {
+    val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
+}
+
+fun generateCUSPFromUSM(usm: UpdateSynthesisModel, nfa: NFA) =
+    CUSP(
+        setOf(usm.reachability.initialNode),
+        setOf(usm.reachability.finalNode),
+        usm.initialRouting.associate { Pair(it.source, setOf(it.target)) },
+        usm.finalRouting.associate { Pair(it.source, setOf(it.target)) },
+        nfa
+    )
+
+fun generateCUSPTFromCUSP(cusp: CUSP) =
+    CUSPT(
+        -1,
+        -2,
+        cusp.initialRouting + mapOf(-1 to cusp.initialSwitches),
+        cusp.finalRouting + cusp.finalSwitches.associateWith { setOf(-2) },
+        cusp.policy,
+    )
 
 fun runProblem() {
     var time: Long = measureTimeMillis {
@@ -25,6 +64,7 @@ fun runProblem() {
             if (Options.drawGraphs) outputPrettyNetwork(usm)
         }
 
+        val cusp = generateCUSPFromUSM(usm, nfa)
         if (Options.drawGraphs) outputPrettyNetwork(usm)
 
         //addGraphicCoordinatesToPG(petriGame)
@@ -32,7 +72,7 @@ fun runProblem() {
 
         println("Problem file: ${Options.testCase}")
         println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
-        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
+        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameFromCUSP(cusp)
         if (Options.debugPath != null) {
             generatePnmlFileFromPetriGame(
                 petriGame.apply { addGraphicCoordinatesToPG(this) },
@@ -50,7 +90,7 @@ fun runProblem() {
 
         time = measureTimeMillis {
             verifier = Verifier(modelPath)
-            bisectionSearch(verifier, queryPath, updateSwitchCount)
+            sequentialSearch(verifier, queryPath, updateSwitchCount)
         }
 
         println("Total verification time: ${time / 1000.0} seconds")
@@ -63,7 +103,7 @@ fun generateNFA(){
     val jsonText = Options.testCase.readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
     val combinedWaypointNFA = genCombinedWaypointNFA(usm)
-    combinedWaypointNFA.export("WaypointsNFA")
+    combinedWaypointNFA.export(Options.onlyNFAGen!!)
     println("Waypoint NFA successfully generated!")
 }
 
@@ -88,10 +128,10 @@ object Options {
 
 
     val onlyNFAGen by argParser.option(
-        ArgType.Boolean,
+        ArgType.String,
         shortName = "onlynfa",
         description = "Only does the NFA translation, nothing more"
-    ).default(false)
+    )
 
     val debugPath by argParser.option(
         ArgType.String,
@@ -100,11 +140,18 @@ object Options {
         description = "Output debugging files with the given prefix"
     )
 
+    val maxSwicthesInBatch by argParser.option(
+        ArgType.Int,
+        shortName = "sb",
+        fullName = "switches_in_batch",
+        description = "The maximum number of switches that can be in a batch. 0 = No limit"
+    ).default(0)
+
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
 fun main(args: Array<String>) {
     Options.argParser.parse(args)
-    if(Options.onlyNFAGen) generateNFA()
+    if (Options.onlyNFAGen != null) generateNFA()
     else runProblem()
 }

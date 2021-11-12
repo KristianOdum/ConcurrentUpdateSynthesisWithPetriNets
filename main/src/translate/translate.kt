@@ -133,6 +133,9 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
+    val pMaxBatches = Place(Options.maxSwicthesInBatch, "${updatePrefix}_P_MAXBATCHES")
+    if(Options.maxSwicthesInBatch != 0) places.add(pMaxBatches) //Only add if option is set
+
     arcs.add(Arc(pCount, tConup, 1))
     arcs.add(Arc(tConup, pCount, 1))
     arcs.add(Arc(pQueueing, tConup, 1))
@@ -154,6 +157,11 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
         val pLimiter = Place(1, "${switchPrefix}_P_${u}_LIMITER").apply { places.add(this) }
         val tQueue = Transition(true, "${switchPrefix}_T_${u}_QUEUE").apply { transitions.add(this) }
         val tUpdate = Transition(false, "${switchPrefix}_T_${u}_UPDATE").apply { transitions.add(this) }
+
+        if(Options.maxSwicthesInBatch != 0){
+            arcs.add(Arc(pMaxBatches, tQueue, 1))
+            arcs.add(Arc(tUpdate, pMaxBatches, 1))
+        }
 
         arcs.add(Arc(tQueue, pCount, 1))
         arcs.add(Arc(pCount, tUpdate, 1))

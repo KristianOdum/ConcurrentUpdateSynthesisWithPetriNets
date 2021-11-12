@@ -1,35 +1,25 @@
-import com.xenomachina.argparser.ArgParser
-import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
+import kotlin.io.path.pathString
 
-fun printUsage() {
-    println(
-"""
-benchmarks <engine_path> <tests_dir> [output_dir] [main_jar_path]
-"""
-    )
-}
+data class OursFlip(val ours: Map<Measure, Any>, val flips: Map<Measure, Any>)
 
 fun main(args: Array<String>) {
 
-    val (enginePath, testsRootDir, outputDir, mainJarPath) = try {
-        listOf(
-            Path.of(args[0]),
-            Path.of(args[1]),
-            Path.of(args.getOrNull(2) ?: "output"),
-            Path.of(args.getOrNull(3) ?: "main.jar")
-        )
-    } catch (e: Exception) {
-        println("Whoopsie daisy, you wrote something crazy!")
-        printUsage()
-        throw e
-    }
+    val ours = handleResultsOurs(Path.of("../output/output/ours")).map { it.path.pathString to it.fields }.toMap()
+    val flips = handleResultsFlip(Path.of("../output/output/flip")).map { it.path.pathString to it.fields }.toMap()
 
-    outputDir.createDirectories()
+    val combined = ours.filter { it.key in flips }.map { (k, v) -> k to OursFlip(v, flips[k]!!) }.toMap()
 
-    val testCases = testsRootDir.toFile().walk().filter { it.extension == "json" }
+    val solved = combined.filterValues { it.ours[Measure.Batches] != null && it.flips[Measure.Batches] != null }
 
-    runTestcases(testCases.toList(), BenchmarkOptions(mainJarPath, enginePath, outputDir))
+    val better = solved.filter { it.value.flips[Measure.Batches] as Int > it.value.ours[Measure.Batches] as Int }
+    val flipUsesTagAndMatchButWeDont = solved.filter { (it.value.flips[Measure.UsesTagAndMatch] ?: false) as Boolean }
 
+    println("Total ${ours.entries.size}")
+    println("Solved ${solved.size}")
+    println("Better in ${better.size}")
+    println("Flip uses TAM but we don't: ${flipUsesTagAndMatchButWeDont.size}")
+
+    println(cactusPlotTime(combined))
+    //val a = aggregateBy(res) { Path.of(it.path).parent.name }
 }
