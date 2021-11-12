@@ -12,8 +12,8 @@ import kotlin.system.measureTimeMillis
 typealias Switch = Int
 
 data class CUSP(
-    val initialSwitches: Set<Switch>,
-    val finalSwitches: Set<Switch>,
+    val ingressSwitches: Set<Switch>,
+    val egressSwitches: Set<Switch>,
     val initialRouting: Map<Switch, Set<Switch>>,
     val finalRouting: Map<Switch, Set<Switch>>,
     val policy: NFA,
@@ -21,22 +21,36 @@ data class CUSP(
     val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
 }
 
+// Same as CUSP, but we have pseudonodes as initial and final that routes to set of initial and final switches, respectively.
 data class CUSPT(
-    val initialSwitch: Switch,
-    val finalSwitch: Switch,
+    val ingressSwitch: Switch,
+    val egressSwitch: Switch,
     val initialRouting: Map<Switch, Set<Switch>>,
     val finalRouting: Map<Switch, Set<Switch>>,
     val policy: NFA,
 ) {
     val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
+
+    override fun toString(): String {
+        var res = "flow: $ingressSwitch to $egressSwitch\n"
+        res += "Initial: "
+        for ((from, to) in initialRouting) {
+            res += "$from -> $to"
+        }
+        res += "Final: "
+        for ((from, to) in finalRouting) {
+            res += "$from -> $to"
+        }
+        return res
+    }
 }
 
 fun generateCUSPFromUSM(usm: UpdateSynthesisModel, nfa: NFA) =
     CUSP(
         setOf(usm.reachability.initialNode),
         setOf(usm.reachability.finalNode),
-        usm.initialRouting.associate { Pair(it.source, setOf(it.target)) },
-        usm.finalRouting.associate { Pair(it.source, setOf(it.target)) },
+        usm.initialRouting.associate { Pair(it.source, setOf(it.target)) } + mapOf(usm.reachability.finalNode to setOf()),
+        usm.finalRouting.associate { Pair(it.source, setOf(it.target)) } + mapOf(usm.reachability.finalNode to setOf()),
         nfa
     )
 
@@ -44,8 +58,12 @@ fun generateCUSPTFromCUSP(cusp: CUSP) =
     CUSPT(
         -1,
         -2,
-        cusp.initialRouting + mapOf(-1 to cusp.initialSwitches),
-        cusp.finalRouting + cusp.finalSwitches.associateWith { setOf(-2) },
+        cusp.initialRouting
+                + mapOf(-1 to cusp.ingressSwitches)
+                + cusp.egressSwitches.associateWith { setOf(-2) },
+        cusp.finalRouting
+                + mapOf(-1 to cusp.ingressSwitches)
+                + cusp.egressSwitches.associateWith { setOf(-2) },
         cusp.policy,
     )
 
@@ -65,6 +83,7 @@ fun runProblem() {
         }
 
         val cusp = generateCUSPFromUSM(usm, nfa)
+        val cuspt = generateCUSPTFromCUSP(cusp)
         if (Options.drawGraphs) outputPrettyNetwork(usm)
 
         //addGraphicCoordinatesToPG(petriGame)
@@ -72,7 +91,7 @@ fun runProblem() {
 
         println("Problem file: ${Options.testCase}")
         println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
-        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameFromCUSP(cusp)
+        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameFromCUSPT(cuspt)
         if (Options.debugPath != null) {
             generatePnmlFileFromPetriGame(
                 petriGame.apply { addGraphicCoordinatesToPG(this) },
@@ -83,7 +102,7 @@ fun runProblem() {
         generatePnmlFileFromPetriGame(petriGame, modelPath)
         println(
             "Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
-                    "\nPetri game arcs: ${petriGame.arcs.size}\nPetri game initial markings: ${petriGame.places.sumOf { it.initialMarkings }}"
+                    "\nPetri game arcs: ${petriGame.arcs.size}\nPetri game initial markings: ${petriGame.places.sumOf { it.initialTokens }}"
         )
 
         val verifier: Verifier

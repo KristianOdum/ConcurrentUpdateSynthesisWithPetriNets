@@ -9,7 +9,7 @@ var nextId = 0
 
 open class Node(val name: String, var pos: Pair<Int, Int> = Pair(0, 0))
 
-class Place(val initialMarkings: Int, name: String) : Node(name) {
+class Place(val initialTokens: Int, name: String) : Node(name) {
     val id: Int = nextId
 
     override fun equals(other: Any?): Boolean {
@@ -18,7 +18,7 @@ class Place(val initialMarkings: Int, name: String) : Node(name) {
     }
 
     override fun hashCode(): Int {
-        var result = initialMarkings
+        var result = initialTokens
         result = 31 * result + name.hashCode()
         return result
     }

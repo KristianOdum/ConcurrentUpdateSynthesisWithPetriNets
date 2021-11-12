@@ -1,11 +1,13 @@
+package synthetic
+
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-data class Pos(val x: Int, val y: Int) {
+private data class Pos(val x: Int, val y: Int) {
     operator fun plus(other: Pos) = Pos(x + other.x, y + other.y)
 }
-data class Vertex(val id: Int, val p: Pos)
-data class Edge(val from: Vertex, val to: Vertex, val weight: Int)
+private data class Vertex(val id: Int, val p: Pos)
+private data class Edge(val from: Vertex, val to: Vertex, val weight: Int)
 
 fun generateSyntheticProblem(switches: Int, edges: Int, ingress: Int, egress: Int) {
     val a = (sqrt(switches.toDouble()) / 2.0).toInt()

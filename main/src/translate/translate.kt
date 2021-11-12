@@ -2,7 +2,9 @@ package translate
 
 import PetriGame
 import Arc
+import CUSPT
 import Place
+import Switch
 import Transition
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
@@ -17,27 +19,26 @@ const val switchPrefix = "SWITCH"
 
 data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path, val updateSwitchCount: Int)
 
-fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, policyNFA: NFA): PetriGameQueryPath {
+private data class Edge(val from: Switch, val to: Switch) {
+    override fun toString(): String {
+        return "$from --> $to"
+    }
+}
+private infix fun Switch.edge(other: Switch) = Edge(this, other)
+
+fun generatePetriGameFromCUSPT(cuspt: CUSPT): PetriGameQueryPath {
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
     val transitions: MutableSet<Transition> = mutableSetOf()
     val arcs: MutableSet<Arc> = mutableSetOf()
 
-    val switchToTopologyPlaceMap: MutableMap<Int, Place> = mutableMapOf()
-    val switchToUnvisitedPlaceMap: MutableMap<Int, Place> = mutableMapOf()
+    val switchToTopologyPlaceMap: MutableMap<Switch, Place> = mutableMapOf()
+    val switchToUnvisitedPlaceMap: MutableMap<Switch, Place> = mutableMapOf()
     val edgeToTopologyTransitionMap: MutableMap<Edge, Transition> = mutableMapOf()
-
-    val initialNode = usm.reachability.initialNode
-    val finalNode = usm.reachability.finalNode
-
-    // TODO: We do not consider undefinity at all, and that is probably fine
 
     // Network Topology Components
     // Create places. Everyone has a placekeeper place and a yet-to-be-visited place,
-    val allSwitches = (usm.initialRouting + usm.finalRouting).let {
-            allEdges -> allEdges.map { it.source } + allEdges.map { it.target }
-        }.distinct()
-    for (s: Int in allSwitches) {
+    for (s: Int in cuspt.allSwitches) {
         val p = Place(0, "${topologyPrefix}_P_$s")
         val pUnvisited = Place(2, "${topologyPrefix}_UV_$s")
 
@@ -49,32 +50,34 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     }
 
     // Create shared transitions
-    for (edge: Edge in (usm.initialRouting + usm.finalRouting).distinct()) {
-        val t = Transition(true, "${topologyPrefix}_T_" + edge.source + "_" + edge.target)
-        transitions.add(t)
-        edgeToTopologyTransitionMap[edge] = t
+    for ((source, nextHops) in (cuspt.initialRouting.entries + cuspt.finalRouting.entries)) {
+        for (nextHop in nextHops) {
+            val t = Transition(true, "${topologyPrefix}_T_" + source + "_" + nextHop)
+            transitions.add(t)
+            edgeToTopologyTransitionMap[source edge nextHop] = t
 
-        // Add arc from place to transition
-        val place: Place? = switchToTopologyPlaceMap[edge.source]
-        assert(place != null)
-        arcs.add(Arc(place!!, t, 1))
+            // Add arc from place to transition
+            val place: Place = switchToTopologyPlaceMap[source]!!
+            arcs.add(Arc(place, t, 1))
 
-        // Add arc from unvisitedplace to transition
-        val uPlace: Place? = switchToUnvisitedPlaceMap[edge.target]
-        assert(uPlace != null)
-        arcs.add(Arc(uPlace!!, t, 1))
+            // Add arc from unvisitedplace to transition
+            val uPlace: Place? = switchToUnvisitedPlaceMap[nextHop]
+            assert(uPlace != null)
+            arcs.add(Arc(uPlace!!, t, 1))
 
-        // Add arc from transition to target node
-        val tPlace: Place? = switchToTopologyPlaceMap[edge.target]
-        assert(tPlace != null)
-        arcs.add(Arc(t, tPlace!!, 1))
+            // Add arc from transition to nextHop node
+            val tPlace: Place? = switchToTopologyPlaceMap[nextHop]
+            assert(tPlace != null)
+            arcs.add(Arc(t, tPlace!!, 1))
+        }
     }
 
     // Switch Components
-    // Find u \in V where R^i(u) != R^f(u) // TODO: This can be optimized by finding iEdge and fEdge simultaneously
-    val updatableSwitches: Set<Int> = (
-            ((usm.initialRouting union usm.finalRouting) subtract (usm.initialRouting intersect usm.finalRouting))
-            .map { it.source }).toSet()
+    // Find u \in V where R^i(u) != R^f(u)
+
+    // Only switches that are different in final and initial routing
+    val updatableSwitches = (cuspt.initialRouting.entries.toList() + cuspt.finalRouting.entries.toList())
+        .groupBy { it.key }.filter { it.value.size != 2 || it.value[0] != it.value[1] }.map { it.key }
 
     // Update State Component
     val pQueueing = Place(0, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
@@ -98,17 +101,14 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     arcs.add(Arc(pInvCount, tReady, updatableSwitches.count()))
     arcs.add(Arc(tReady, pInvCount, updatableSwitches.count()))
 
-    for (u: Int in updatableSwitches) {
-        val iEdge = usm.initialRouting.find { it.source == u }
-        val fEdge = usm.finalRouting.find { it.source == u }
-
+    for (s: Switch in updatableSwitches) {
         // Make sure the initial edge is different to its final correspondent
-        val pInit = Place(1, "${switchPrefix}_P_${u}_INIT").apply { places.add(this) }
-        val pQueue = Place(0, "${switchPrefix}_P_${u}_QUEUE").apply { places.add(this) }
-        val pFinal = Place(0, "${switchPrefix}_P_${u}_FINAL").apply { places.add(this) }
-        val pLimiter = Place(1, "${switchPrefix}_P_${u}_LIMITER").apply { places.add(this) }
-        val tQueue = Transition(true, "${switchPrefix}_T_${u}_QUEUE").apply { transitions.add(this) }
-        val tUpdate = Transition(false, "${switchPrefix}_T_${u}_UPDATE").apply { transitions.add(this) }
+        val pInit = Place(1, "${switchPrefix}_P_${s}_INIT").apply { places.add(this) }
+        val pQueue = Place(0, "${switchPrefix}_P_${s}_QUEUE").apply { places.add(this) }
+        val pFinal = Place(0, "${switchPrefix}_P_${s}_FINAL").apply { places.add(this) }
+        val pLimiter = Place(1, "${switchPrefix}_P_${s}_LIMITER").apply { places.add(this) }
+        val tQueue = Transition(true, "${switchPrefix}_T_${s}_QUEUE").apply { transitions.add(this) }
+        val tUpdate = Transition(false, "${switchPrefix}_T_${s}_UPDATE").apply { transitions.add(this) }
 
         if(Options.maxSwicthesInBatch != 0){
             arcs.add(Arc(pMaxBatches, tQueue, 1))
@@ -131,13 +131,17 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
         arcs.add(Arc(tUpdate, pUpdating, 1))
         arcs.add(Arc(tUpdate, pInvCount, 1))
 
-        if (iEdge != null) {
-            arcs.add(Arc(pInit, edgeToTopologyTransitionMap[iEdge]!!, 1))
-            arcs.add(Arc(edgeToTopologyTransitionMap[iEdge]!!, pInit, 1))
+        val initialNextHops = cuspt.initialRouting[s] ?: setOf()
+        val finalNextHops = cuspt.finalRouting[s] ?: setOf()
+
+        for (nextHop in initialNextHops) {
+            arcs.add(Arc(pInit, edgeToTopologyTransitionMap[s edge nextHop]!!))
+            arcs.add(Arc(edgeToTopologyTransitionMap[s edge nextHop]!!, pInit))
         }
-        if (fEdge != null) {
-            arcs.add(Arc(pFinal, edgeToTopologyTransitionMap[fEdge]!!, 1))
-            arcs.add(Arc(edgeToTopologyTransitionMap[fEdge]!!, pFinal, 1))
+
+        for (nextHop in finalNextHops) {
+            arcs.add(Arc(pFinal, edgeToTopologyTransitionMap[s edge nextHop]!!))
+            arcs.add(Arc(edgeToTopologyTransitionMap[s edge nextHop]!!, pFinal))
         }
     }
 
@@ -148,12 +152,12 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     val tInject = Transition(false, "PACKET_INJECT_T")
     transitions.add(tInject)
     arcs.add(Arc(pUpdating, tInject, 1))
-    arcs.add(Arc(tInject, switchToTopologyPlaceMap[initialNode]!!, 1))
-    arcs.add(Arc(switchToUnvisitedPlaceMap[initialNode]!!, tInject, 1))
+    arcs.add(Arc(tInject, switchToTopologyPlaceMap[cuspt.ingressSwitch]!!, 1))
+    arcs.add(Arc(switchToUnvisitedPlaceMap[cuspt.ingressSwitch]!!, tInject, 1))
 
     // NFA
     // First we translate the NFA into a Petri Game
-    val (nfaPetriGame, nfaStateToPlaceMap, nfaActionToTransitionMap) = policyNFA.toPetriGame()
+    val (nfaPetriGame, nfaStateToPlaceMap, nfaActionToTransitionMap) = cuspt.policy.toPetriGame()
 
     // Add all information from nfa petri to this full petri
     places.addAll(nfaPetriGame.places)
@@ -161,37 +165,26 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     arcs.addAll(nfaPetriGame.arcs)
 
     // NFA tracking component
-    val turnSwitch = Place(1, "${nfaPrefix}_TURN").apply { places.add(this) }
+    val turnSwitch = Place(0, "${nfaPrefix}_TURN").apply { places.add(this) }
     val switchToTrackPlace = mutableMapOf<Int, Place>()
 
-    for (s in allSwitches) {
+    for (s in cuspt.allSwitches) {
         val trackPlace = Place(0, "${nfaPrefix}_TRACK_Pswitch${s}")
         switchToTrackPlace[s] = trackPlace
     }
     places.addAll(switchToTrackPlace.values)
 
     // Create nfa actions transitions
-    for (a in policyNFA.actions) {
+    for (a in cuspt.policy.actions) {
         val nfaSwitchTransition = nfaActionToTransitionMap[a]!!
         arcs.add(Arc(switchToTrackPlace[a.label]!!, nfaSwitchTransition))
     }
 
     for ((e, t) in edgeToTopologyTransitionMap) {
-        arcs.add(Arc(t, switchToTrackPlace[e.target]!!))
+        arcs.add(Arc(t, switchToTrackPlace[e.to]!!))
     }
 
-    arcs.add(Arc(turnSwitch, tInject))
-    // Handle initial state in NFA
-    // Add arc from tInject to initial place from NFA
-    arcs.add(Arc(tInject, nfaStateToPlaceMap[policyNFA.initialState]!!))
-    arcs.add(Arc(tInject, switchToTrackPlace[usm.reachability.initialNode]!!))
-
-    val initialSwitchTransitions = policyNFA.outgoing(policyNFA.initialState!!)
-        .filter { it.label == usm.reachability.initialNode }.map { nfaActionToTransitionMap[it]!! }
-
-    for (t in initialSwitchTransitions) {
-        arcs.add(Arc(switchToTrackPlace[usm.reachability.initialNode]!!, t))
-    }
+    arcs.add(Arc(tInject, turnSwitch))
 
     // Arcs from turn place to topology transitions
     for (t in edgeToTopologyTransitionMap.values)
@@ -218,7 +211,10 @@ data class NFAToPetriGame(val petriGame: PetriGame,
 
 fun NFA.toPetriGame(): NFAToPetriGame {
     val arcs: MutableSet<Arc> = mutableSetOf()
-    val stateToPlaceMap = states.associateWith { Place(0, "${nfaPrefix}_Pstate_${it.name}") }
+    val stateToPlaceMap = states.associateWith {
+        if (it.type == NFA.StateType.INITIAL) Place(1, "${nfaPrefix}_Pstate_${it.name}")
+        else Place(0, "${nfaPrefix}_Pstate_${it.name}")
+    }
     var i = 0
     val actionToTransitionMap = actions.associateWith {
         Transition(true, "${nfaPrefix}_T${i++}_Switch${it.label}")
@@ -277,7 +273,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame, modelPath: Path): String
                         "initialMarking" {
                             "text" {
                                 attribute("removeWhitespace", "")
-                                -p.initialMarkings.toString()
+                                -p.initialTokens.toString()
                             }
                         }
                     }
