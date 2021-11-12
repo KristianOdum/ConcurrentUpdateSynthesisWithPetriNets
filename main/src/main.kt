@@ -9,21 +9,44 @@ import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.system.measureTimeMillis
 
+typealias Switch = Int
+
 data class CUSP(
-    val initialSwitches: Set<Int>,
-    val finalSwitches: Set<Int>,
-    val initialRouting: Map<Int, Set<Int>>,
-    val finalRouting: Map<Int, Set<Int>>,
-    val policy: NFA
-    )
+    val initialSwitches: Set<Switch>,
+    val finalSwitches: Set<Switch>,
+    val initialRouting: Map<Switch, Set<Switch>>,
+    val finalRouting: Map<Switch, Set<Switch>>,
+    val policy: NFA,
+) {
+    val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
+}
+
+data class CUSPT(
+    val initialSwitch: Switch,
+    val finalSwitch: Switch,
+    val initialRouting: Map<Switch, Set<Switch>>,
+    val finalRouting: Map<Switch, Set<Switch>>,
+    val policy: NFA,
+) {
+    val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
+}
 
 fun generateCUSPFromUSM(usm: UpdateSynthesisModel, nfa: NFA) =
     CUSP(
         setOf(usm.reachability.initialNode),
         setOf(usm.reachability.finalNode),
-        usm.initialRouting.map { Pair(it.source, setOf(it.target)) }.toMap(),
-        usm.finalRouting.map { Pair(it.source, setOf(it.target)) }.toMap(),
+        usm.initialRouting.associate { Pair(it.source, setOf(it.target)) },
+        usm.finalRouting.associate { Pair(it.source, setOf(it.target)) },
         nfa
+    )
+
+fun generateCUSPTFromCUSP(cusp: CUSP) =
+    CUSPT(
+        -1,
+        -2,
+        cusp.initialRouting + mapOf(-1 to cusp.initialSwitches),
+        cusp.finalRouting + cusp.finalSwitches.associateWith { setOf(-2) },
+        cusp.policy,
     )
 
 fun runProblem() {
@@ -41,6 +64,7 @@ fun runProblem() {
             if (Options.drawGraphs) outputPrettyNetwork(usm)
         }
 
+        val cusp = generateCUSPFromUSM(usm, nfa)
         if (Options.drawGraphs) outputPrettyNetwork(usm)
 
         //addGraphicCoordinatesToPG(petriGame)
@@ -48,7 +72,7 @@ fun runProblem() {
 
         println("Problem file: ${Options.testCase}")
         println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
-        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, nfa)
+        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameFromCUSP(cusp)
         if (Options.debugPath != null) {
             generatePnmlFileFromPetriGame(
                 petriGame.apply { addGraphicCoordinatesToPG(this) },
