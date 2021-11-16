@@ -3,6 +3,7 @@ package translate
 import PetriGame
 import Arc
 import Place
+import Switch
 import Transition
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
@@ -15,9 +16,11 @@ const val topologyPrefix = "TOPOLOGY"
 const val updatePrefix = "UPDATE"
 const val switchPrefix = "SWITCH"
 
+typealias DFAState = Int
+
 data class PetriGameQueryPath(val petriGame: PetriGame, val queryPath: Path, val updateSwitchCount: Int)
 
-fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, policyNFA: NFA): PetriGameQueryPath {
+fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, policyDFA: DFA<Switch>): PetriGameQueryPath {
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
     val transitions: MutableSet<Transition> = mutableSetOf()
@@ -293,7 +296,7 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
 
     // NFA
     // First we translate the NFA into a Petri Game
-    val (nfaPetriGame, nfaStateToPlaceMap, nfaActionToTransitionMap) = policyNFA.toPetriGame()
+    val (nfaPetriGame, nfaStateToPlaceMap, nfaActionToTransitionMap) = DFAToPetriGame(policyDFA)
 
     // Add all information from nfa petri to this full petri
     places.addAll(nfaPetriGame.places)
@@ -311,9 +314,9 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     places.addAll(switchToTrackPlace.values)
 
     // Create nfa actions transitions
-    for (a in policyNFA.actions) {
-        val nfaSwitchTransition = nfaActionToTransitionMap[a]!!
-        arcs.add(Arc(switchToTrackPlace[a.label]!!, nfaSwitchTransition))
+    for (action in policyDFA.allActions) {
+        val nfaSwitchTransition = nfaActionToTransitionMap[action]!!
+        arcs.add(Arc(switchToTrackPlace[action.label]!!, nfaSwitchTransition))
     }
 
     for ((e, t) in edgeToTopologyTransitionMap) {
@@ -323,15 +326,15 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     arcs.add(Arc(turnSwitch, tInject))
     // Handle initial state in NFA
     // Add arc from tInject to initial place from NFA
-    arcs.add(Arc(tInject, nfaStateToPlaceMap[policyNFA.initialState]!!))
+    arcs.add(Arc(tInject, nfaStateToPlaceMap[policyDFA.initial]!!))
     arcs.add(Arc(tInject, switchToTrackPlace[usm.reachability.initialNode]!!))
 
-    val initialSwitchTransitions = policyNFA.outgoing(policyNFA.initialState!!)
-        .filter { it.label == usm.reachability.initialNode }.map { nfaActionToTransitionMap[it]!! }
+//    val initialSwitchTransitions = policyDFA.outgoing(policyDFA.initialState!!)
+//        .filter { it.label == usm.reachability.initialNode }.map { nfaActionToTransitionMap[it]!! }
 
-    for (t in initialSwitchTransitions) {
-        arcs.add(Arc(switchToTrackPlace[usm.reachability.initialNode]!!, t))
-    }
+//    for (t in initialSwitchTransitions) {
+//        arcs.add(Arc(switchToTrackPlace[usm.reachability.initialNode]!!, t))
+//    }
 
     // Arcs from turn place to topology transitions
     for (t in edgeToTopologyTransitionMap.values)
@@ -346,21 +349,21 @@ fun generatePetriGameModelFromUpdateSynthesisNetwork(usm: UpdateSynthesisModel, 
     val queryPath = kotlin.io.path.createTempFile("query")
     val switchNames = switches.map { "${switchPrefix}_P_${it}_FINAL" }
 
-    val acceptingPlaces = nfaStateToPlaceMap.filterKeys { it.type == NFA.StateType.FINAL }.values.map { it.name }
+    val acceptingPlaces = nfaStateToPlaceMap.filterKeys { it in policyDFA.finals }.values.map { it.name }
     queryPath.toFile().writeText(generateQuery(switchNames, acceptingPlaces))
 
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, maxBatches)
 }
 
-data class NFAToPetriGame(val petriGame: PetriGame,
-                          val stateToPlaceMap: Map<NFA.State, Place>,
-                          val actionToTransitionMap: Map<NFA.Action, Transition>)
+data class DFAToPetriGame(val petriGame: PetriGame,
+                          val stateToPlaceMap: Map<DFAState, Place>,
+                          val actionToTransitionMap: Map<DFA.Action<Switch>, Transition>)
 
-fun NFA.toPetriGame(): NFAToPetriGame {
+fun DFAToPetriGame(dfa: DFA<Switch>): DFAToPetriGame {
     val arcs: MutableSet<Arc> = mutableSetOf()
-    val stateToPlaceMap = states.associateWith { Place(0, "${nfaPrefix}_Pstate_${it.name}") }
+    val stateToPlaceMap = dfa.states.associateWith { Place(0, "${nfaPrefix}_Pstate_${it}") }
     var i = 0
-    val actionToTransitionMap = actions.associateWith {
+    val actionToTransitionMap = dfa.allActions.associateWith {
         Transition(true, "${nfaPrefix}_T${i++}_Switch${it.label}")
     }
 
@@ -369,7 +372,7 @@ fun NFA.toPetriGame(): NFAToPetriGame {
         arcs.add(Arc(aToT.value, stateToPlaceMap[aToT.key.to]!!))
     }
 
-    return NFAToPetriGame(PetriGame(stateToPlaceMap.values.toSet(), actionToTransitionMap.values.toSet(), arcs.toSet()), stateToPlaceMap, actionToTransitionMap)
+    return DFAToPetriGame(PetriGame(stateToPlaceMap.values.toSet(), actionToTransitionMap.values.toSet(), arcs.toSet()), stateToPlaceMap, actionToTransitionMap)
 }
 
 fun updateSynthesisModelFromJsonText(jsonText: String): UpdateSynthesisModel {

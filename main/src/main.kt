@@ -16,7 +16,7 @@ data class CUSP(
     val finalSwitches: Set<Switch>,
     val initialRouting: Map<Switch, Set<Switch>>,
     val finalRouting: Map<Switch, Set<Switch>>,
-    val policy: NFA,
+    val policy: DFA<Switch>,
 ) {
     val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
 }
@@ -26,18 +26,18 @@ data class CUSPT(
     val finalSwitch: Switch,
     val initialRouting: Map<Switch, Set<Switch>>,
     val finalRouting: Map<Switch, Set<Switch>>,
-    val policy: NFA,
+    val policy: DFA<Switch>,
 ) {
     val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
 }
 
-fun generateCUSPFromUSM(usm: UpdateSynthesisModel, nfa: NFA) =
+fun generateCUSPFromUSM(usm: UpdateSynthesisModel, dfa: DFA<Switch>) =
     CUSP(
         setOf(usm.reachability.initialNode),
         setOf(usm.reachability.finalNode),
         usm.initialRouting.associate { Pair(it.source, setOf(it.target)) },
         usm.finalRouting.associate { Pair(it.source, setOf(it.target)) },
-        nfa
+        dfa
     )
 
 fun generateCUSPTFromCUSP(cusp: CUSP) =
@@ -55,24 +55,31 @@ fun runProblem() {
 
         val usm = updateSynthesisModelFromJsonText(jsonText)
 
-        val nfa: NFA
+        val dfa: DFA<Switch>
         var time: Long = measureTimeMillis {
-            nfa = generateNFAFromUSMProperties(usm)
-            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("nfa.svg"))
-            nfa.prune()
-            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("nfa_pruned.svg"))
-            if (Options.drawGraphs) outputPrettyNetwork(usm)
+            dfa = generateNFAFromUSMProperties(usm)
         }
+        if (Options.drawGraphs) dfa.toGraphviz().toFile(File("nfa.svg"))
 
-        val cusp = generateCUSPFromUSM(usm, nfa)
-        if (Options.drawGraphs) outputPrettyNetwork(usm)
+        val cusp = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfa))
+
+        if (Options.drawGraphs) outputPrettyNetwork(usm).toFile(File("network.svg"))
+
+        println("Problem file: ${Options.testCase}")
+        println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${dfa.states.size} \nNFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
+
+
+        val subcusps: List<CUSPT>
+        time = measureTimeMillis {
+            subcusps = topologicalDecomposition(cusp)
+        }
+        println("Decomposed topology into ${subcusps.size} subproblems")
+        println("Topological decomposition took ${time / 1000.0} seconds")
 
         //addGraphicCoordinatesToPG(petriGame)
         val modelPath = kotlin.io.path.createTempFile("pnml_model")
 
-        println("Problem file: ${Options.testCase}")
-        println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${nfa.states.size} \nNFA transitions: ${nfa.actions.size}")
-        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameFromCUSP(cusp)
+        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, dfa)
         if (Options.debugPath != null) {
             generatePnmlFileFromPetriGame(
                 petriGame.apply { addGraphicCoordinatesToPG(this) },
@@ -102,7 +109,7 @@ fun runProblem() {
 fun generateNFA(){
     val jsonText = Options.testCase.readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
-    val combinedWaypointNFA = genCombinedWaypointNFA(usm)
+    val combinedWaypointNFA = genCombinedWaypointDFA(usm)
     combinedWaypointNFA.export(Options.onlyNFAGen!!)
     println("Waypoint NFA successfully generated!")
 }
@@ -142,7 +149,7 @@ object Options {
 
     val maxSwicthesInBatch by argParser.option(
         ArgType.Int,
-        shortName = "sb",
+        shortName = "m",
         fullName = "switches_in_batch",
         description = "The maximum number of switches that can be in a batch. 0 = No limit"
     ).default(0)

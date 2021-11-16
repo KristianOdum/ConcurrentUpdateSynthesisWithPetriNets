@@ -1,16 +1,15 @@
-import guru.nidi.graphviz.attribute.Color.*
 import guru.nidi.graphviz.engine.Format
+import guru.nidi.graphviz.engine.Renderer
 import guru.nidi.graphviz.graph
 import guru.nidi.graphviz.toGraphviz
 import translate.UpdateSynthesisModel
-import java.awt.image.BufferedImage
 import java.io.File
 
-fun outputPrettyNetwork(usm: UpdateSynthesisModel) {
-
+fun outputPrettyNetwork(usm: UpdateSynthesisModel): Renderer {
     val g = graph(directed = true) {
         usm.reachability.initialNode.toString().get().attrs().add("shape","hexagon")
         usm.reachability.finalNode.toString().get().attrs().add("shape","doublecircle")
+        usm.waypoint.waypoints.forEach { it.toString().get().attrs().add("shape", "house") }
 
         for ((from, to) in usm.initialRouting) {
             (from.toString() - to.toString()).attrs().add("color","blue")
@@ -20,5 +19,5 @@ fun outputPrettyNetwork(usm: UpdateSynthesisModel) {
         }
     }
 
-    g.toGraphviz().render(Format.PNG).toFile(File("network.png").apply { createNewFile() })
+    return g.toGraphviz().render(Format.SVG)
 }

@@ -1,0 +1,75 @@
+package translate
+
+import CUSPT
+import SCC
+import Switch
+import generateCUSPFromUSM
+import generateCUSPTFromCUSP
+import partialTopologicalOrder
+
+fun generateNFAFromUSMProperties(usm: UpdateSynthesisModel): DFA<Switch> {
+    // NFA for reachability
+    val reachabilityNFA = genReachabilityDFA(usm)
+
+    // NFA for waypoint
+    val combinedWaypointNFA = genCombinedWaypointDFA(usm)
+
+    // Intersect the reachability NFA with the waypoints
+    val res = combinedWaypointNFA intersect reachabilityNFA
+    return res
+}
+
+fun genCombinedWaypointDFA(usm: UpdateSynthesisModel): DFA<Switch> {
+    val waypoints = waypointDFAs(usm)
+
+    if (waypoints.size > 1) {
+        val pseudoCUSP = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfaOf { it.state(initial = true) }))
+        val pto = partialTopologicalOrder(pseudoCUSP)
+
+        return waypoints.reduce { acc, it -> DFATopologicalOrderReduction(acc intersect it, pto) }
+    } else {
+        return waypoints.reduce { acc, it -> acc intersect it }
+    }
+}
+
+fun genReachabilityDFA(usm: UpdateSynthesisModel): DFA<Switch> =
+    dfaOf<Switch> { d ->
+        val sI = d.state(initial = true)
+        val sJ = d.state()
+        val sF = d.state(final = true)
+
+        sI.edgeTo(sJ, usm.reachability.initialNode)
+        sI.edgeToDead(usm.switches - setOf(usm.reachability.initialNode))
+
+        sJ.edgeTo(sF, usm.reachability.finalNode)
+
+        sF.edgeToDead(usm.switches)
+    }
+
+fun waypointDFAs(usm: UpdateSynthesisModel): Set<DFA<Switch>> =
+    usm.waypoint.waypoints.map { waypointDFA(it) }.toSet()
+
+fun waypointDFA(w: Switch) =
+    dfaOf<Switch> { d ->
+        val sI = d.state(initial = true)
+        val sJ = d.state(final = true)
+
+        sI.edgeTo(sJ, w)
+        sJ.edgeToDead(w)
+    }
+
+fun DFATopologicalOrderReduction(dfa: DFA<Switch>, pto: List<SCC>): DFA<Switch> {
+    val relLabels = dfa.relevantLabels().toSet()
+    val order = pto.map { it intersect relLabels }.filter { it.isNotEmpty() }
+
+    val ptoDFA = dfaOf<Switch> { d ->
+        val states = listOf(d.state(initial = true)) + (1 until order.size).map { d.state() } + listOf(d.state(final = true))
+
+        for ((p, n, o) in states.zipWithNext().zip(order).map { Triple(it.first.first, it.first.second, it.second) }) {
+            p.edgeTo(n, o)
+            n.edgeToDead(relLabels - o)
+        }
+    }
+
+    return dfa intersect ptoDFA
+}
