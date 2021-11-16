@@ -5,15 +5,20 @@ import translate.*
 import verification.Verifier
 import verification.sequentialSearch
 import java.io.File
+import java.lang.Integer.max
+import java.lang.Integer.min
 import java.nio.file.Path
 import kotlin.io.path.readText
+import kotlin.io.path.writeText
 import kotlin.system.measureTimeMillis
+
+const val GRAPHICS_OUT = "main/graphics_out"
 
 typealias Switch = Int
 
 data class CUSP(
-    val initialSwitches: Set<Switch>,
-    val finalSwitches: Set<Switch>,
+    val ingressSwitches: Set<Switch>,
+    val egressSwitches: Set<Switch>,
     val initialRouting: Map<Switch, Set<Switch>>,
     val finalRouting: Map<Switch, Set<Switch>>,
     val policy: DFA<Switch>,
@@ -21,22 +26,36 @@ data class CUSP(
     val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
 }
 
+// Same as CUSP, but we have pseudonodes as initial and final that routes to set of initial and final switches, respectively.
 data class CUSPT(
-    val initialSwitch: Switch,
-    val finalSwitch: Switch,
+    val ingressSwitch: Switch,
+    val egressSwitch: Switch,
     val initialRouting: Map<Switch, Set<Switch>>,
     val finalRouting: Map<Switch, Set<Switch>>,
     val policy: DFA<Switch>,
 ) {
     val allSwitches: Set<Switch> = (initialRouting + finalRouting).entries.flatMap { setOf(it.key) + it.value }.toSet()
+
+    override fun toString(): String {
+        var res = "flow: $ingressSwitch to $egressSwitch\n"
+        res += "Initial: "
+        for ((from, to) in initialRouting) {
+            res += "$from -> $to"
+        }
+        res += "Final: "
+        for ((from, to) in finalRouting) {
+            res += "$from -> $to"
+        }
+        return res
+    }
 }
 
 fun generateCUSPFromUSM(usm: UpdateSynthesisModel, dfa: DFA<Switch>) =
     CUSP(
         setOf(usm.reachability.initialNode),
         setOf(usm.reachability.finalNode),
-        usm.initialRouting.associate { Pair(it.source, setOf(it.target)) },
-        usm.finalRouting.associate { Pair(it.source, setOf(it.target)) },
+        usm.switches.associateWith { s -> setOf((usm.initialRouting.find { it.source == s } ?: return@associateWith setOf<Switch>()).target) },
+        usm.switches.associateWith { s -> setOf((usm.finalRouting.find { it.source == s } ?: return@associateWith setOf<Switch>()).target) },
         dfa
     )
 
@@ -44,8 +63,12 @@ fun generateCUSPTFromCUSP(cusp: CUSP) =
     CUSPT(
         -1,
         -2,
-        cusp.initialRouting + mapOf(-1 to cusp.initialSwitches),
-        cusp.finalRouting + cusp.finalSwitches.associateWith { setOf(-2) },
+        cusp.initialRouting
+                + mapOf(-1 to cusp.ingressSwitches)
+                + cusp.egressSwitches.associateWith { setOf(-2) },
+        cusp.finalRouting
+                + mapOf(-1 to cusp.ingressSwitches)
+                + cusp.egressSwitches.associateWith { setOf(-2) },
         cusp.policy,
     )
 
@@ -57,61 +80,81 @@ fun runProblem() {
 
         val dfa: DFA<Switch>
         var time: Long = measureTimeMillis {
-            dfa = generateNFAFromUSMProperties(usm)
+            dfa = generateDFAFromUSMProperties(usm)
         }
-        if (Options.drawGraphs) dfa.toGraphviz().toFile(File("nfa.svg"))
+        if (Options.drawGraphs) dfa.toGraphviz().toFile(File("${GRAPHICS_OUT}/dfa.svg"))
 
-        val cusp = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfa))
+        val cuspt = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfa))
 
-        if (Options.drawGraphs) outputPrettyNetwork(usm).toFile(File("network.svg"))
+        if (Options.drawGraphs) outputPrettyNetwork(usm).toFile(File("${GRAPHICS_OUT}/network.svg"))
 
         println("Problem file: ${Options.testCase}")
-        println("NFA generation time: ${time / 1000.0} seconds \nNFA states: ${dfa.states.size} \nNFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
+        println("DFA generation time: ${time / 1000.0} seconds \nDFA states: ${dfa.states.size} \nDFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
 
-
-        val subcusps: List<CUSPT>
+        val subcuspts: List<CUSPT>
         time = measureTimeMillis {
-            subcusps = topologicalDecomposition(cusp)
+            subcuspts = topologicalDecomposition(cuspt)
         }
-        println("Decomposed topology into ${subcusps.size} subproblems")
+        println("Decomposed topology into ${subcuspts.size} subproblems")
         println("Topological decomposition took ${time / 1000.0} seconds")
 
-        //addGraphicCoordinatesToPG(petriGame)
-        val modelPath = kotlin.io.path.createTempFile("pnml_model")
+        var totalMinimum = 0
 
-        val (petriGame, queryPath, updateSwitchCount) = generatePetriGameModelFromUpdateSynthesisNetwork(usm, dfa)
-        if (Options.debugPath != null) {
-            generatePnmlFileFromPetriGame(
-                petriGame.apply { addGraphicCoordinatesToPG(this) },
-                Path.of(Options.debugPath!! + "_model.pnml")
+        for ((i, subcuspt) in subcuspts.withIndex()) {
+            println("-- Solving subproblem $i --")
+
+            val modelPath = kotlin.io.path.createTempFile("pnml_model$i")
+
+            val petriGame: PetriGame
+            val queryPath: Path
+            val updateSwitchCount: Int
+            time = measureTimeMillis {
+                val (_petriGame, _queryPath, _updateSwitchCount) = generatePetriGameFromCUSPT(subcuspt)
+                petriGame = _petriGame
+                queryPath = _queryPath
+                updateSwitchCount = _updateSwitchCount
+            }
+            println("Translation to Petri game took ${time / 1000.0} seconds.")
+
+            if (Options.debugPath != null)
+                petriGame.apply { addGraphicCoordinatesToPG(this) }
+
+            val pnml = generatePnmlFileFromPetriGame(petriGame)
+            if (Options.debugPath != null) {
+                Path.of(Options.debugPath!! + "_model$i.pnml").toFile().writeText(pnml)
+                Path.of(Options.debugPath!! + "_query$i.q").toFile().writeText(queryPath.toFile().readText())
+            }
+            modelPath.writeText(pnml)
+            println(
+                "Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
+                        "\nPetri game arcs: ${petriGame.arcs.size}\nPetri game initial markings: ${petriGame.places.sumOf { it.initialTokens }}"
             )
-            Path.of(Options.debugPath!! + "_query.q").toFile().writeText(queryPath.toFile().readText())
-        }
-        generatePnmlFileFromPetriGame(petriGame, modelPath)
-        println(
-            "Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
-                    "\nPetri game arcs: ${petriGame.arcs.size}\nPetri game initial markings: ${petriGame.places.sumOf { it.initialMarkings }}"
-        )
 
-        val verifier: Verifier
-
-        time = measureTimeMillis {
-            verifier = Verifier(modelPath)
-            sequentialSearch(verifier, queryPath, updateSwitchCount)
+            val verifier: Verifier
+            time = measureTimeMillis {
+                verifier = Verifier(modelPath)
+                val batches = sequentialSearch(verifier, queryPath, updateSwitchCount)
+                println("Subproblem $i solvable with minimum $batches batches.")
+                totalMinimum = max(totalMinimum, batches)
+            }
+            println("Subproblem verification time: ${time / 1000.0} seconds")
         }
 
-        println("Total verification time: ${time / 1000.0} seconds")
-
+        if (totalMinimum == Int.MAX_VALUE) {
+            println("Problem is unsolvable!")
+        } else {
+            println("Minimum batches required: $totalMinimum")
+        }
     }
     println("Total program runtime: ${time / 1000.0} seconds")
 }
 
-fun generateNFA(){
+fun generateDFA(){
     val jsonText = Options.testCase.readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
-    val combinedWaypointNFA = genCombinedWaypointDFA(usm)
-    combinedWaypointNFA.export(Options.onlyNFAGen!!)
-    println("Waypoint NFA successfully generated!")
+    val combinedWaypointDFA = genCombinedWaypointDFA(usm)
+    combinedWaypointDFA.export(Options.onlyDFAGen!!)
+    println("Waypoint DFA successfully generated!")
 }
 
 object Options {
@@ -134,10 +177,10 @@ object Options {
     ).default(false)
 
 
-    val onlyNFAGen by argParser.option(
+    val onlyDFAGen by argParser.option(
         ArgType.String,
-        shortName = "onlynfa",
-        description = "Only does the NFA translation, nothing more"
+        shortName = "onlydfa",
+        description = "Only does the DFA translation, nothing more"
     )
 
     val debugPath by argParser.option(
@@ -159,6 +202,6 @@ object Options {
 
 fun main(args: Array<String>) {
     Options.argParser.parse(args)
-    if (Options.onlyNFAGen != null) generateNFA()
+    if (Options.onlyDFAGen != null) generateDFA()
     else runProblem()
 }

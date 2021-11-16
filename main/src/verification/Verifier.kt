@@ -28,8 +28,8 @@ class Verifier(val modelPath: Path) {
     }
 }
 
-fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
-    var batches = 0
+fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int {
+    var batches = Int.MAX_VALUE
     var case: Int
 
     var verified: Boolean
@@ -45,19 +45,18 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
     }
     print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $upperBound batches\n")
 
-    if(verified){
+    if (verified) {
         batches = upperBound
 
-        if(upperBound > 5){
+        if (upperBound > 5) {
             case = 5
-        } else if(upperBound == 5){
+        } else if (upperBound == 5) {
             case = 4
-        } else{
+        } else {
             case = upperBound - 1
         }
         // Test with 5 or less
-        while (case > 0)
-        {
+        while (case > 0) {
             query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $case")
 
             tempQueryFile.writeText(query)
@@ -71,16 +70,16 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
             if (verified) {
                 batches = case
                 case -= 1
-            } else if(!verified and (case == 5)) {
+            } else if (!verified and (case == 5)) {
                 case = upperBound - 1
                 break
-            } else if(!verified){
+            } else if (!verified) {
                 break
             }
         }
         //Test sequentially down from max batches
-        if(!verified){
-            while (case > 5){
+        if (!verified) {
+            while (case > 5) {
                 query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $case")
 
                 tempQueryFile.writeText(query)
@@ -102,10 +101,5 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int) {
         }
     }
 
-
-
-    if (batches == 0)
-        println("Could not satisfy the query with any number of batches!")
-    else
-        println("Minimum $batches batches required to satisfy the query!")
+    return batches
 }

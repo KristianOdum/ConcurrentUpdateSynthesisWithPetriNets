@@ -1,23 +1,22 @@
 import translate.*
-import translate.Edge
 import java.util.*
 
 typealias SCC = List<Int>
 typealias SCCId = Int
 
-fun topologicalDecomposition(cusp: CUSPT): List<CUSPT> {
-    val pto = partialTopologicalOrder(cusp)
-    val posDFAState = switchPossibleNFAStates(cusp, pto)
+fun topologicalDecomposition(cuspt: CUSPT): List<CUSPT> {
+    val pto = partialTopologicalOrder(cuspt)
+    val posDFAState = switchPossibleDFAStates(cuspt, pto)
     val ptoi: Iterable<IndexedValue<SCC>> = pto.withIndex()
     val switchToSCCId: Map<Switch, SCCId> = ptoi.flatMap { (sccid, scc) -> scc.map { Pair(it, sccid) } }.toMap()
 
     val sccNarrowness = ptoi.associate { Pair(it.index, 0.0) }.toMutableMap() // SCC to Narrowness
 
-    val sccId = ptoi.first { cusp.initialSwitch in it.value }.index
+    val sccId = ptoi.first { cuspt.ingressSwitch in it.value }.index
     sccNarrowness[sccId] = 1.0
 
     data class Subproblem(val switches: MutableSet<Switch>, val initSwitch: Switch, var finalSwitch: Switch)
-    var currentSubproblem = Subproblem(mutableSetOf(), cusp.initialSwitch, -1)
+    var currentSubproblem = Subproblem(mutableSetOf(), cuspt.ingressSwitch, -1)
     val subproblems = mutableListOf<Subproblem>()
 
     for ((i, scc) in ptoi) {
@@ -29,7 +28,7 @@ fun topologicalDecomposition(cusp: CUSPT): List<CUSPT> {
         }
 
         for (s in scc) {
-            val nexts = (cusp.initialRouting[s] ?: setOf()) union (cusp.finalRouting[s] ?: setOf())
+            val nexts = (cuspt.initialRouting[s] ?: setOf()) union (cuspt.finalRouting[s] ?: setOf())
             val outdegree = nexts.size
 
             nexts.filter { it !in scc }.map { switchToSCCId[it]!! }.forEach {
@@ -46,25 +45,35 @@ fun topologicalDecomposition(cusp: CUSPT): List<CUSPT> {
     subproblems.removeIf { it.switches.size <= 2 }
 
     val subCusps = subproblems.map { sp ->
+        val dfa = dfaOf<Switch>(sp.switches) { d ->
+            val initialSwitchState = posDFAState[sp.initSwitch]!!.single()
+            val finalSwitchState = posDFAState[sp.finalSwitch]!!.single()
+
+            val oldToNewState = cuspt.policy.states.associateWith {
+                d.state(initial = it == initialSwitchState, final = it == finalSwitchState)
+            }
+
+            cuspt.policy.delta.forEach { (from, outgoing) ->
+                outgoing.forEach { (label, to) ->
+                    if (label in sp.switches)
+                        oldToNewState[from]!!.edgeTo(oldToNewState[to]!!, label)
+                }
+            }
+        }
+
+        val subreachability = dfaOf<Switch>(sp.switches) { d ->
+            val sI = d.state(initial = true)
+            val sF = d.state(final = true)
+
+            sI.edgeTo(sF, sp.finalSwitch)
+        }
+
         CUSPT(
             sp.initSwitch,
             sp.finalSwitch,
-            cusp.initialRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches },
-            cusp.finalRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches },
-            dfaOf<Switch> { d ->
-                val initialSwitchState = posDFAState[sp.initSwitch]!!.single()
-                val finalSwitchState = posDFAState[sp.finalSwitch]!!.single()
-
-                val oldToNewState = cusp.policy.states.associateWith {
-                    d.state(initial = it == initialSwitchState, final = it == finalSwitchState)
-                }
-
-                cusp.policy.delta.forEach { (from, outgoing) ->
-                    outgoing.forEach { (label, to) ->
-                        oldToNewState[from]!!.edgeTo(oldToNewState[to]!!, label)
-                    }
-                }
-            }
+            cuspt.initialRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches },
+            cuspt.finalRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches },
+            dfa intersect subreachability
         )
     }
 
@@ -72,18 +81,18 @@ fun topologicalDecomposition(cusp: CUSPT): List<CUSPT> {
 }
 
 
-fun switchPossibleNFAStates(cusp: CUSPT, pto: List<SCC>): Map<Switch, Set<DFAState>> {
+fun switchPossibleDFAStates(cuspt: CUSPT, pto: List<SCC>): Map<Switch, Set<DFAState>> {
     fun nextStates(ns: Set<DFAState>, s: Switch) =
-        ns.map { cusp.policy[it, s] }
+        ns.map { cuspt.policy[it, s] }
 
-    val posNFAStates = cusp.allSwitches.associateWith { setOf<DFAState>() }.toMutableMap()
+    val posNFAStates = cuspt.allSwitches.associateWith { setOf<DFAState>() }.toMutableMap()
 
-    posNFAStates[cusp.initialSwitch] = nextStates(setOf(cusp.policy.initial), cusp.initialSwitch).toSet()
+    posNFAStates[cuspt.ingressSwitch] = nextStates(setOf(cuspt.policy.initial), cuspt.ingressSwitch).toSet()
 
     for (scc in pto) {
         for (i in 0 until scc.size - 1) {
             for (s in scc) {
-                val nexts = (cusp.initialRouting[s] ?: setOf()) union (cusp.finalRouting[s] ?: setOf())
+                val nexts = (cuspt.initialRouting[s] ?: setOf()) union (cuspt.finalRouting[s] ?: setOf())
 
                 nexts.filter { it in scc }.forEach {
                     posNFAStates[it] = posNFAStates[it]!! union nextStates(posNFAStates[s]!!, it)
@@ -92,7 +101,7 @@ fun switchPossibleNFAStates(cusp: CUSPT, pto: List<SCC>): Map<Switch, Set<DFASta
         }
 
         for (s in scc) {
-            val nexts = (cusp.initialRouting[s] ?: setOf()) union (cusp.finalRouting[s] ?: setOf())
+            val nexts = (cuspt.initialRouting[s] ?: setOf()) union (cuspt.finalRouting[s] ?: setOf())
 
             nexts.filter { it !in scc }.forEach {
                 posNFAStates[it] = posNFAStates[it]!! union nextStates(posNFAStates[s]!!, it)
@@ -101,21 +110,22 @@ fun switchPossibleNFAStates(cusp: CUSPT, pto: List<SCC>): Map<Switch, Set<DFASta
     }
 
     // Hack to make sure pseudo-final switch has DFA state
-    posNFAStates[-2] = cusp.policy.finals
+    posNFAStates[-2] = cuspt.policy.finals
 
     return posNFAStates
 }
 
-fun partialTopologicalOrder(cusp: CUSPT): List<SCC> {
+fun partialTopologicalOrder(cuspt: CUSPT): List<SCC> {
     data class NodeInfo(var index: Int, var lowlink: Int, var onStack: Boolean)
+    data class Edge(val source: Switch, val target: Switch)
 
     var index = 0
     val stack = Stack<Int>()
-    val info = cusp.allSwitches.associateWith { NodeInfo(-1, -1, false) }
+    val info = cuspt.allSwitches.associateWith { NodeInfo(-1, -1, false) }
     var scc = 0
     val sccs = mutableMapOf<Int, Int>() // Switch to scc
 
-    val allEdges = (cusp.finalRouting.toList() + cusp.initialRouting.toList()).flatMap { (s, Rs) -> Rs.map { Edge(s, it) } }
+    val allEdges = (cuspt.finalRouting.toList() + cuspt.initialRouting.toList()).flatMap { (s, Rs) -> Rs.map { Edge(s, it) } }
 
     fun strongConnect(node: Int) {
         info[node]!!.index = index
@@ -147,8 +157,8 @@ fun partialTopologicalOrder(cusp: CUSPT): List<SCC> {
         }
     }
 
-    strongConnect(cusp.initialSwitch)
-    cusp.allSwitches.forEach {
+    strongConnect(cuspt.ingressSwitch)
+    cuspt.allSwitches.forEach {
         if (info[it]!!.index == -1) {
             strongConnect(it)
         }

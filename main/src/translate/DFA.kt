@@ -10,15 +10,15 @@ import java.io.File
 
 private typealias State = Int
 
-fun <T> dfaOf(f: (dfa: DFAContext<T>) -> Unit): DFA<T> {
-    val dfaContext = DFAContext<T>()
+fun <T> dfaOf(alphabet: Set<T>, f: (dfa: DFAContext<T>) -> Unit): DFA<T> {
+    val dfaContext = DFAContext<T>(alphabet)
 
     f(dfaContext)
 
     return dfaContext.toDFA()
 }
 
-class DFAContext<T> {
+class DFAContext<T>(val alphabet: Set<T>) {
     protected var sid = 0
 
     protected var initialState: State<T>? = null
@@ -63,10 +63,10 @@ class DFAContext<T> {
     }
 
     fun toDFA() = DFA(actions.map { Pair(it.key.id, it.value.map { Pair(it.key, it.value.id) }.toMap()) }.toMap(),
-        initialState!!.id, finalStates.map { it.id }.toSet() )
+        initialState!!.id, finalStates.map { it.id }.toSet(), alphabet )
 }
 
-class DFA<T>(val delta: Map<State, Map<T, State>>, val initial: State, val finals: Set<State>) {
+class DFA<T>(val delta: Map<State, Map<T, State>>, val initial: State, val finals: Set<State>, val alphabet: Set<T>) {
     companion object {
         const val deadstate = -1
     }
@@ -74,14 +74,17 @@ class DFA<T>(val delta: Map<State, Map<T, State>>, val initial: State, val final
     val states = delta.keys + delta.flatMap { it.value.map { it.value } }
 
     data class Action<T>(val from: State, val label: T, val to:State)
-    val allActions = delta.flatMap { o -> o.value.map { Action(o.key, it.key, it.value) } }
+    val allActions = delta.flatMap { o ->
+        o.value.map { Action(o.key, it.key, it.value) } + (alphabet - o.value.map { it.key }).map { Action(o.key, it, o.key) }
+    }
 
     operator fun get(s: State) = delta[s] ?: mapOf()
     operator fun get(s: State, a: T) = (delta[s] ?: mapOf())[a] ?: s
 }
 
+// This assumes they have the same alphabet
 infix fun <T> DFA<T>.intersect(other: DFA<T>): DFA<T> =
-    dfaOf { d ->
+    dfaOf(this.alphabet) { d ->
         val h = mutableMapOf<Pair<State, State>, DFAContext.State<T>>()
         val canReachFinal = mutableMapOf<DFAContext.State<T>, Boolean>()
         fun expand(s: Pair<State, State>): DFAContext.State<T> {
@@ -157,7 +160,7 @@ fun <T> DFA<T>.relevantLabels() =
 
 fun <T> DFA<T>.toGraphviz(): Renderer {
     val graph: MutableGraph = graph(directed = true) {
-        initial.toString().get().attrs().add("shape", "hexagon")
+        initial.toString().get().attrs().add("color", "red")
         finals.forEach { it.toString().get().attrs().add("shape", "doublecircle") }
 
         delta.forEach { (s, o) ->
