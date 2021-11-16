@@ -9,6 +9,8 @@ import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.system.measureTimeMillis
 
+const val GRAPHICS_OUT = "main/graphics_out"
+
 typealias Switch = Int
 
 data class CUSP(
@@ -49,8 +51,8 @@ fun generateCUSPFromUSM(usm: UpdateSynthesisModel, nfa: NFA) =
     CUSP(
         setOf(usm.reachability.initialNode),
         setOf(usm.reachability.finalNode),
-        usm.initialRouting.associate { Pair(it.source, setOf(it.target)) } + mapOf(usm.reachability.finalNode to setOf()),
-        usm.finalRouting.associate { Pair(it.source, setOf(it.target)) } + mapOf(usm.reachability.finalNode to setOf()),
+        usm.switches.associateWith { s -> setOf((usm.initialRouting.find { it.source == s } ?: return@associateWith setOf<Switch>()).target) },
+        usm.switches.associateWith { s -> setOf((usm.finalRouting.find { it.source == s } ?: return@associateWith setOf<Switch>()).target) },
         nfa
     )
 
@@ -76,9 +78,9 @@ fun runProblem() {
         val nfa: NFA
         var time: Long = measureTimeMillis {
             nfa = generateNFAFromUSMProperties(usm)
-            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("nfa.svg"))
+            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("$GRAPHICS_OUT/nfa.svg"))
             nfa.prune()
-            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("nfa_pruned.svg"))
+            if (Options.drawGraphs) nfa.toGraphviz().toFile(File("$GRAPHICS_OUT/nfa_pruned.svg"))
             if (Options.drawGraphs) outputPrettyNetwork(usm)
         }
 

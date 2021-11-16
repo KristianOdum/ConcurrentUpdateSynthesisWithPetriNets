@@ -20,5 +20,5 @@ fun outputPrettyNetwork(usm: UpdateSynthesisModel) {
         }
     }
 
-    g.toGraphviz().render(Format.PNG).toFile(File("network.png").apply { createNewFile() })
+    g.toGraphviz().render(Format.PNG).toFile(File("$GRAPHICS_OUT/network.png").apply { createNewFile() })
 }
