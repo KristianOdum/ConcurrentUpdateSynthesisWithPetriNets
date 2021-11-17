@@ -83,13 +83,16 @@ fun runProblem() {
             dfa = generateDFAFromUSMProperties(usm)
         }
         if (Options.drawGraphs) dfa.toGraphviz().toFile(File("${GRAPHICS_OUT}/dfa.svg"))
+        println("DFA generation time: ${time / 1000.0} seconds \nDFA states: ${dfa.states.size} \nDFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
+
 
         val cuspt = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfa))
+        println("Problem file: ${Options.testCase}")
+        println("Switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it] }}")
+        println("Nontrivial switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it]
+                && cuspt.initialRouting[it]!!.isNotEmpty() && cuspt.finalRouting[it]!!.isNotEmpty() }}")
 
         if (Options.drawGraphs) outputPrettyNetwork(usm).toFile(File("${GRAPHICS_OUT}/network.svg"))
-
-        println("Problem file: ${Options.testCase}")
-        println("DFA generation time: ${time / 1000.0} seconds \nDFA states: ${dfa.states.size} \nDFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
 
         val subcuspts: List<CUSPT>
         time = measureTimeMillis {
@@ -200,7 +203,11 @@ object Options {
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
+const val version = "1.0"
+
 fun main(args: Array<String>) {
+    println("Version: $version")
+
     Options.argParser.parse(args)
     if (Options.onlyDFAGen != null) generateDFA()
     else runProblem()

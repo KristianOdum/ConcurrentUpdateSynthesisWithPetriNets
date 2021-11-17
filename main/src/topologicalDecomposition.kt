@@ -85,9 +85,9 @@ fun switchPossibleDFAStates(cuspt: CUSPT, pto: List<SCC>): Map<Switch, Set<DFASt
     fun nextStates(ns: Set<DFAState>, s: Switch) =
         ns.map { cuspt.policy[it, s] }
 
-    val posNFAStates = cuspt.allSwitches.associateWith { setOf<DFAState>() }.toMutableMap()
+    val posDFAStates = cuspt.allSwitches.associateWith { setOf<DFAState>() }.toMutableMap()
 
-    posNFAStates[cuspt.ingressSwitch] = nextStates(setOf(cuspt.policy.initial), cuspt.ingressSwitch).toSet()
+    posDFAStates[cuspt.ingressSwitch] = nextStates(setOf(cuspt.policy.initial), cuspt.ingressSwitch).toSet()
 
     for (scc in pto) {
         for (i in 0 until scc.size - 1) {
@@ -95,7 +95,7 @@ fun switchPossibleDFAStates(cuspt: CUSPT, pto: List<SCC>): Map<Switch, Set<DFASt
                 val nexts = (cuspt.initialRouting[s] ?: setOf()) union (cuspt.finalRouting[s] ?: setOf())
 
                 nexts.filter { it in scc }.forEach {
-                    posNFAStates[it] = posNFAStates[it]!! union nextStates(posNFAStates[s]!!, it)
+                    posDFAStates[it] = posDFAStates[it]!! union nextStates(posDFAStates[s]!!, it)
                 }
             }
         }
@@ -104,15 +104,35 @@ fun switchPossibleDFAStates(cuspt: CUSPT, pto: List<SCC>): Map<Switch, Set<DFASt
             val nexts = (cuspt.initialRouting[s] ?: setOf()) union (cuspt.finalRouting[s] ?: setOf())
 
             nexts.filter { it !in scc }.forEach {
-                posNFAStates[it] = posNFAStates[it]!! union nextStates(posNFAStates[s]!!, it)
+                posDFAStates[it] = posDFAStates[it]!! union nextStates(posDFAStates[s]!!, it)
             }
         }
     }
 
-    // Hack to make sure pseudo-final switch has DFA state
-    posNFAStates[-2] = cuspt.policy.finals
+    for ((s, dfaStates) in posDFAStates) {
+        val unusableSwitches = cuspt.policy.relevantLabels() intersect pto.takeWhile { s !in it }.flatten()
+        posDFAStates[s] = dfaStates.filter { canReachGoalFromState(cuspt.policy, it, unusableSwitches) }.toSet()
+    }
 
-    return posNFAStates
+    // Hack to make sure pseudo-final switch has DFA state
+    posDFAStates[-2] = cuspt.policy.finals
+
+    return posDFAStates
+}
+
+
+fun <T> canReachGoalFromState(dfa: DFA<T>, state: DFAState, blacklistedLabels: Set<T> = setOf()): Boolean {
+    val h = mutableMapOf<DFAState, Boolean>()
+    fun aux(state: DFAState): Boolean {
+        if (state in dfa.finals)
+            h[state] = true
+        if (state in h) return h[state]!!
+
+        h[state] = false
+        h[state] = dfa.delta[state]?.filter { state != it.value && it.key !in blacklistedLabels}?.any { aux(it.value) } ?: false
+        return h[state]!!
+    }
+    return aux(state)
 }
 
 fun partialTopologicalOrder(cuspt: CUSPT): List<SCC> {

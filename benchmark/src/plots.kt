@@ -1,8 +1,8 @@
 
 
-fun cactusPlotTime(d: Map<String, OursFlip>): String {
-    val ours = d.values.map { it.ours[Measure.TotalTime] }.filterNotNull().map { it as Double }
-    val flip = d.values.map { it.flips[Measure.TotalTime] }.filterNotNull().map { it as Double }
+fun cactusPlotTime(d: Map<String, OursFlipWithNull>): String {
+    val ours = d.values.filter { it.ours?.get(Measure.TotalTime) != null }.map { it.ours?.get(Measure.TotalTime) }.filterNotNull().map { it as Double }
+    val flip = d.values.filter { !((it.flips?.get(Measure.UsesTagAndMatch) ?: false) as Boolean) }.map { it.flips?.get(Measure.TotalTime) }.filterNotNull().map { it as Double }
 
-    return listOf(ours, flip).map { it.sorted().withIndex() }.map { it.joinToString("") { "(${it.index},${it.value})" } }.joinToString("\n")
+    return listOf(ours, flip).map { it.sorted().withIndex() }.joinToString("\n") { it.joinToString("") { "(${it.index},${it.value})" } }
 }
