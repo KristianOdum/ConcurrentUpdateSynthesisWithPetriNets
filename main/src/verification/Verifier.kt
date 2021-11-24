@@ -1,6 +1,7 @@
 package verification
 
 import Options
+import println
 import java.nio.file.Path
 import kotlin.math.floor
 import kotlin.math.roundToInt
@@ -10,19 +11,19 @@ class Verifier(val modelPath: Path) {
     fun verifyQuery(queryPath: String): Boolean {
         val command = "${Options.enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0"
         if (Options.outputVerifyPN)
-            println(command)
+            v.High.println(command)
         val pro = Runtime.getRuntime().exec(command)
         pro.waitFor()
         val output = pro.inputStream.readAllBytes().map { Char(it.toInt()) }.joinToString("")
         if (Options.outputVerifyPN)
-            println(output)
+            v.High.println(output)
 
         return if (output.contains("is satisfied"))
             true
         else if (output.contains("is NOT satisfied"))
             false
         else {
-            println(pro.errorStream.readAllBytes().map { Char(it.toInt()) }.joinToString(""))
+            v.Low.println(pro.errorStream.readAllBytes().map { Char(it.toInt()) }.joinToString(""))
             throw Exception()
         }
     }
@@ -43,7 +44,7 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int 
     time = measureTimeMillis {
         verified = verifier.verifyQuery(tempQueryFile.path)
     }
-    print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $upperBound batches\n")
+    v.High.println("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $upperBound batches")
 
     if (verified) {
         batches = upperBound
@@ -65,7 +66,7 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int 
                 verified = verifier.verifyQuery(tempQueryFile.path)
             }
 
-            print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches\n")
+            v.High.println("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches\n")
 
             if (verified) {
                 batches = case
@@ -88,7 +89,7 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int 
                     verified = verifier.verifyQuery(tempQueryFile.path)
                 }
 
-                print("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches\n")
+                v.High.println("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches")
 
                 if (verified) {
                     batches = case

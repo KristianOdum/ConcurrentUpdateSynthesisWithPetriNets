@@ -10,6 +10,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.nio.file.Path
+import javax.swing.text.html.Option
 
 // Constants used for consistent naming
 const val dfaPrefix = "DFA"
@@ -89,20 +90,18 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT): PetriGameQueryPath {
 
     val updatableNonTrivialSwitches: Set<Int> =
         updatableSwitches.filter { it !in onlyInFinal && it !in onlyInInitial }.toSet()
-    var numSwitchComponents: Int
+
     // Update State Component
-    val maxInBatch =
-        if (Options.maxSwicthesInBatch != 0) { //Only add if option is set
-            Options.maxSwicthesInBatch
-        } else
-            updatableNonTrivialSwitches.size + if (onlyInInitial.isEmpty()) 0 else 1 + if (onlyInFinal.isEmpty()) 1 else 0
-    numSwitchComponents = updatableNonTrivialSwitches.size + if (onlyInInitial.isEmpty()) 0 else 1 + if (onlyInFinal.isEmpty()) 0 else 1
+    val numSwitchComponents = updatableNonTrivialSwitches.size + (if (onlyInInitial.isEmpty()) 0 else 1) + (if (onlyInFinal.isEmpty()) 0 else 1)
+    val maxInBatch = if (Options.maxSwicthesInBatch != 0) Options.maxSwicthesInBatch else numSwitchComponents
+    val pCountInitialTokens = if (onlyInFinal.isEmpty()) 0 else 1
 
     val pQueueing = Place(1, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
-    val pInvCount = Place(maxInBatch, "${updatePrefix}_P_INVCOUNT").apply { places.add(this) }
-    val pCount = Place(0 + if (onlyInFinal.isEmpty()) 0 else 1, "${updatePrefix}_P_COUNT").apply { places.add(this) }
+    val pInvCount = Place(maxInBatch - pCountInitialTokens, "${updatePrefix}_P_INVCOUNT").apply { places.add(this) }
+    val pCount = Place(pCountInitialTokens, "${updatePrefix}_P_COUNT").apply { places.add(this) }
+    val pTotalQueued = Place(0, "${updatePrefix}_P_TOTAL_QUEUED").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
@@ -113,16 +112,16 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT): PetriGameQueryPath {
     arcs.add(Arc(tConup, pBatches, 1))
     arcs.add(Arc(pUpdating, tReady, 1))
     arcs.add(Arc(tReady, pQueueing, 1))
-    arcs.add(Arc(pInvCount, tReady, numSwitchComponents))
-    arcs.add(Arc(tReady, pInvCount, numSwitchComponents))
+    arcs.add(Arc(pInvCount, tReady, maxInBatch))
+    arcs.add(Arc(tReady, pInvCount, maxInBatch))
 
     val nontrivialSwitchComponentPG = mutableSetOf<PetriGame>()
     for (s: Set<Switch> in updatableNonTrivialSwitches.map { setOf(it) }) {
-        nontrivialSwitchComponentPG += createSwitchComponent(s, false, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating)
+        nontrivialSwitchComponentPG += createSwitchComponent(s, false, false, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
     }
 
-    val initialEqClassSwitchComponentPG = if (onlyInInitial.isEmpty()) null else createSwitchComponent(onlyInInitial, false, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating)
-    val finalEqClassSwitchComponentPG = if (onlyInFinal.isEmpty()) null else createSwitchComponent(onlyInFinal, true, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating)
+    val initialEqClassSwitchComponentPG = if (onlyInInitial.isEmpty()) null else createSwitchComponent(onlyInInitial, false, true, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
+    val finalEqClassSwitchComponentPG = if (onlyInFinal.isEmpty()) null else createSwitchComponent(onlyInFinal, true, false, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
 
     for (pg in (nontrivialSwitchComponentPG + initialEqClassSwitchComponentPG + finalEqClassSwitchComponentPG).filterNotNull()) {
         places.addAll(pg.places)
@@ -188,7 +187,7 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT): PetriGameQueryPath {
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, numSwitchComponents)
 }
 
-private fun createSwitchComponent(s: Set<Switch>, onlyInFinal: Boolean, cuspt: CUSPT, edgeToTopologyTransitionMap: Map<Edge, Transition>, switchComponentsFinalPlaces: MutableSet<Place>, pCount: Place, pInvCount: Place, pQueueing: Place, pUpdating: Place): PetriGame {
+private fun createSwitchComponent(s: Set<Switch>, onlyInFinal: Boolean, onlyInInitial: Boolean, cuspt: CUSPT, edgeToTopologyTransitionMap: Map<Edge, Transition>, switchComponentsFinalPlaces: MutableSet<Place>, pCount: Place, pInvCount: Place, pQueueing: Place, pUpdating: Place, pTotalQueued: Place, numSwitchComponents: Int): PetriGame {
     val name = s.joinToString(separator = "_") { it.toString() }
 
     val places = mutableSetOf<Place>()
@@ -218,6 +217,11 @@ private fun createSwitchComponent(s: Set<Switch>, onlyInFinal: Boolean, cuspt: C
     arcs.add(Arc(pUpdating, tUpdate, 1))
     arcs.add(Arc(tUpdate, pUpdating, 1))
     arcs.add(Arc(tUpdate, pInvCount, 1))
+    arcs.add(Arc(tQueue, pTotalQueued, 1))
+
+    if (onlyInInitial) {
+        arcs.add(Arc(pTotalQueued, tQueue,))
+    }
 
     for (s_i in s) {
         val initialNextHops = cuspt.initialRouting[s_i] ?: setOf()

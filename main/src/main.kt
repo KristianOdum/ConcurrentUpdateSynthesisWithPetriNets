@@ -50,6 +50,15 @@ data class CUSPT(
     }
 }
 
+enum class Verbosity { None, Minimal, Low, High }
+typealias v = Verbosity
+
+fun pseudoprint(s: String) = println(s)
+fun Verbosity.println(s: String) {
+    if (Options.verbosity >= this)
+        pseudoprint(s)
+}
+
 fun generateCUSPFromUSM(usm: UpdateSynthesisModel, dfa: DFA<Switch>) =
     CUSP(
         setOf(usm.reachability.initialNode),
@@ -72,6 +81,7 @@ fun generateCUSPTFromCUSP(cusp: CUSP) =
         cusp.policy,
     )
 
+
 fun runProblem() {
     var time: Long = measureTimeMillis {
         val jsonText = Options.testCase.readText()
@@ -83,14 +93,15 @@ fun runProblem() {
             dfa = generateDFAFromUSMProperties(usm)
         }
         if (Options.drawGraphs) dfa.toGraphviz().toFile(File("${GRAPHICS_OUT}/dfa.svg"))
-        println("DFA generation time: ${time / 1000.0} seconds \nDFA states: ${dfa.states.size} \nDFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
+        v.Low.println("DFA generation time: ${time / 1000.0} seconds \nDFA states: ${dfa.states.size} \nDFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
 
 
         val cuspt = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfa))
-        println("Problem file: ${Options.testCase}")
-        println("Switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it] }}")
-        println("Nontrivial switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it]
-                && cuspt.initialRouting[it]!!.isNotEmpty() && cuspt.finalRouting[it]!!.isNotEmpty() }}")
+        v.Minimal.println("Problem file: ${Options.testCase}\n" +
+            "Switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it] }}\n" +
+            "Nontrivial switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it]
+                && cuspt.initialRouting[it]!!.isNotEmpty() && cuspt.finalRouting[it]!!.isNotEmpty() }}"
+        )
 
         if (Options.drawGraphs) outputPrettyNetwork(usm).toFile(File("${GRAPHICS_OUT}/network.svg"))
 
@@ -98,13 +109,13 @@ fun runProblem() {
         time = measureTimeMillis {
             subcuspts = topologicalDecomposition(cuspt)
         }
-        println("Decomposed topology into ${subcuspts.size} subproblems")
-        println("Topological decomposition took ${time / 1000.0} seconds")
+        v.Low.println("Decomposed topology into ${subcuspts.size} subproblems")
+        v.Low.println("Topological decomposition took ${time / 1000.0} seconds")
 
         var totalMinimum = 0
 
-        for ((i, subcuspt) in subcuspts.withIndex()) {
-            println("-- Solving subproblem $i --")
+        subproblems@for ((i, subcuspt) in subcuspts.withIndex()) {
+            v.High.println("-- Solving subproblem $i --")
 
             val modelPath = kotlin.io.path.createTempFile("pnml_model$i")
 
@@ -117,7 +128,7 @@ fun runProblem() {
                 queryPath = _queryPath
                 updateSwitchCount = _updateSwitchCount
             }
-            println("Translation to Petri game took ${time / 1000.0} seconds.")
+            v.High.println("Translation to Petri game took ${time / 1000.0} seconds.")
 
             if (Options.debugPath != null)
                 petriGame.apply { addGraphicCoordinatesToPG(this) }
@@ -128,7 +139,7 @@ fun runProblem() {
                 Path.of(Options.debugPath!! + "_query$i.q").toFile().writeText(queryPath.toFile().readText())
             }
             modelPath.writeText(pnml)
-            println(
+            v.High.println(
                 "Petri game switches: ${usm.switches.size} \nPetri game updateable switches: ${updateSwitchCount}\nPetri game places: ${petriGame.places.size} \nPetri game transitions: ${petriGame.transitions.size}" +
                         "\nPetri game arcs: ${petriGame.arcs.size}\nPetri game initial markings: ${petriGame.places.sumOf { it.initialTokens }}"
             )
@@ -137,19 +148,23 @@ fun runProblem() {
             time = measureTimeMillis {
                 verifier = Verifier(modelPath)
                 val batches = sequentialSearch(verifier, queryPath, updateSwitchCount)
-                println("Subproblem $i solvable with minimum $batches batches.")
+                if (batches == Int.MAX_VALUE) {
+                    v.Low.println("Subproblem $i unsolvable!")
+                } else {
+                    v.High.println("Subproblem $i solvable with minimum $batches batches.")
+                }
                 totalMinimum = max(totalMinimum, batches)
             }
-            println("Subproblem verification time: ${time / 1000.0} seconds")
+            v.High.println("Subproblem verification time: ${time / 1000.0} seconds")
         }
 
         if (totalMinimum == Int.MAX_VALUE) {
-            println("Problem is unsolvable!")
+            v.Minimal.println("Problem is unsolvable!")
         } else {
-            println("Minimum batches required: $totalMinimum")
+            v.Minimal.println("Minimum batches required: $totalMinimum")
         }
     }
-    println("Total program runtime: ${time / 1000.0} seconds")
+    v.Minimal.println("Total program runtime: ${time / 1000.0} seconds")
 }
 
 fun generateDFA(){
@@ -179,6 +194,12 @@ object Options {
         description = "Draw graphs for various components"
     ).default(false)
 
+    val verbosity by argParser.option(
+        ArgType.Choice<Verbosity>(),
+        shortName = "V",
+        description = "Verbosity of print output"
+    ).default(Verbosity.Low)
+
 
     val onlyDFAGen by argParser.option(
         ArgType.String,
@@ -203,10 +224,10 @@ object Options {
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
-const val version = "1.0"
+const val version = "1.2"
 
 fun main(args: Array<String>) {
-    println("Version: $version")
+    println("Version: $version \n ${args.joinToString(" ")}")
 
     Options.argParser.parse(args)
     if (Options.onlyDFAGen != null) generateDFA()
