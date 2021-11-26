@@ -1,5 +1,7 @@
 package translate
 
+import CUSP
+import Switch
 import guru.nidi.graphviz.attribute.Attributes
 import guru.nidi.graphviz.engine.Format
 import guru.nidi.graphviz.engine.Renderer
@@ -185,3 +187,37 @@ fun <T> DFA<T>.export(path: String){
 
     File(path).writeText(output)
 }
+
+fun DFA<Switch>.getWaypointSubPaths(cusp: CUSP) : MutableList<MutableList<Switch>>{
+    val currentPath = mutableListOf<Switch>()
+    val pathsFound = mutableListOf<MutableList<Switch>>()
+
+    fun pathsFromSwitch(currentNetworkSwitch: Switch, finalSwitches: List<Switch>, currentDFAState: State){
+        if(currentDFAState == DFA.deadstate) return
+        currentPath.add(currentNetworkSwitch)
+
+        if(finalSwitches.contains(currentNetworkSwitch) && finals.contains(currentDFAState)){
+            pathsFound.add(currentPath.toMutableList())
+        }else{
+            for(outgoing in (cusp.initialRouting[currentNetworkSwitch]!!.toList() union cusp.finalRouting[currentNetworkSwitch]!!.toList()).toList()){
+                if (!currentPath.contains(outgoing)){
+                    var nextDFAState: State = currentDFAState
+                    if(delta[currentDFAState]!!.containsKey(outgoing))
+                        nextDFAState = delta[currentDFAState]!![outgoing]!!
+
+                    pathsFromSwitch(outgoing, finalSwitches, nextDFAState)
+                }
+            }
+        }
+        currentPath.remove(currentNetworkSwitch)
+    }
+
+    val initRelevantLabels = delta.filterKeys { it == initial }.values.flatMap { it.entries.filter { it.value != DFA.deadstate }.map { it.key } }
+    val finalRelevantLabels = delta.values.flatMap { it.entries.filter { finals.contains(it.value) }.map { it.key } }
+
+    for (iLabel in initRelevantLabels)
+        pathsFromSwitch(iLabel, finalRelevantLabels, delta[initial]!![iLabel]!!)
+
+    return pathsFound
+}
+
