@@ -30,7 +30,7 @@ private data class Edge(val from: Switch, val to: Switch) {
 
 private infix fun Switch.edge(other: Switch) = Edge(this, other)
 
-fun generatePetriGameFromCUSPT(cuspt: CUSPT): PetriGameQueryPath {
+fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqClasses: Set<Set<Switch>>): PetriGameQueryPath {
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
     val transitions: MutableSet<Transition> = mutableSetOf()
