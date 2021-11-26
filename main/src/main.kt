@@ -178,7 +178,7 @@ fun calcFlipSubpaths(){
     else
         flipSubpaths = combinedWaypointDFA.getWaypointSubPaths(generateCUSPFromUSM(usm, generateDFAFromUSMProperties(usm)))
 
-    File(Options.onlyFLIPSubpaths!!).writeText(flipSubpaths.toString())
+    File(Options.onlyFLIPSubpaths!!).writeText(flipSubpaths.joinToString(";") { it.joinToString(",") })
 
     println("Flip subpaths successfully generated!")
 }
