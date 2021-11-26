@@ -166,12 +166,20 @@ fun runProblem() {
     v.Minimal.println("Total program runtime: ${time / 1000.0} seconds")
 }
 
-fun generateDFA(){
+fun calcFlipSubpaths(){
     val jsonText = Options.testCase.readText()
     val usm = updateSynthesisModelFromJsonText(jsonText)
     val combinedWaypointDFA = genCombinedWaypointDFA(usm)
-    combinedWaypointDFA.export(Options.onlyDFAGen!!)
-    println("Waypoint DFA successfully generated!")
+
+    var flipSubpaths = mutableListOf<MutableList<Switch>>()
+    if(usm.waypoint.waypoints.count() == 1)
+        flipSubpaths.add(mutableListOf(usm.waypoint.waypoints[0]))
+    else
+        flipSubpaths = combinedWaypointDFA.getWaypointSubPaths(generateCUSPFromUSM(usm, generateDFAFromUSMProperties(usm)))
+
+    File(Options.onlyFLIPSubpaths!!).writeText(flipSubpaths.joinToString(";") { it.joinToString(",") })
+
+    println("Flip subpaths successfully generated!")
 }
 
 object Options {
@@ -200,10 +208,10 @@ object Options {
     ).default(Verbosity.Low)
 
 
-    val onlyDFAGen by argParser.option(
+    val onlyFLIPSubpaths by argParser.option(
         ArgType.String,
-        shortName = "onlydfa",
-        description = "Only does the DFA translation, nothing more"
+        shortName = "f",
+        description = "Only calculate subpaths for FLIP, nothing more"
     )
 
     val debugPath by argParser.option(
@@ -223,13 +231,13 @@ object Options {
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
-const val version = "1.2"
+const val version = "1.3"
 
 fun main(args: Array<String>) {
     println("Version: $version \n ${args.joinToString(" ")}")
 
     Options.argParser.parse(args)
-    if (Options.onlyDFAGen != null) generateDFA()
+    if (Options.onlyFLIPSubpaths != null) calcFlipSubpaths()
     else runProblem()
 }
 

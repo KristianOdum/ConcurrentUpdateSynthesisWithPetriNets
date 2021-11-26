@@ -6,6 +6,7 @@ import Switch
 import generateCUSPFromUSM
 import generateCUSPTFromCUSP
 import partialTopologicalOrder
+import java.io.File
 
 fun generateDFAFromUSMProperties(usm: UpdateSynthesisModel): DFA<Switch> {
     // NFA for reachability
@@ -13,6 +14,7 @@ fun generateDFAFromUSMProperties(usm: UpdateSynthesisModel): DFA<Switch> {
 
     // NFA for waypoint
     val combinedWaypointNFA = genCombinedWaypointDFA(usm)
+    if (Options.drawGraphs) combinedWaypointNFA.toGraphviz().toFile(File("main/graphics_out/waypointdfa.svg"))
 
     // Intersect the reachability NFA with the waypoints
     val res = combinedWaypointNFA intersect reachabilityNFA
