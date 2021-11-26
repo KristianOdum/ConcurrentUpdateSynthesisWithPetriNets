@@ -15,7 +15,7 @@ fun Regex.firstGroup(s: String): String? {
 
 fun handleResultsOurs(outputDir: Path): List<TestData> =
     parseResults(outputDir, listOf(
-        { s -> Measure.UpdatableSwitches to """Petri game updateable switches: (\d+)""".toRegex().firstGroup(s)?.toInt() },
+        { s -> Measure.UpdatableSwitches to """Switches to update: (\d+)""".toRegex().firstGroup(s)?.toInt() },
         { s -> Measure.Batches to """Minimum batches required: (\d+)""".toRegex().firstGroup(s)?.toInt()},
         { s -> Measure.TotalTime to """Total program runtime: +(\d+\.\d+) +seconds""".toRegex().firstGroup(s)?.toDouble()}
     ))

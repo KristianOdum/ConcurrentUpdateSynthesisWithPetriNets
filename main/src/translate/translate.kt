@@ -57,7 +57,7 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT): PetriGameQueryPath {
     // Create shared transitions
     for ((source, nextHops) in (cuspt.initialRouting.entries + cuspt.finalRouting.entries)) {
         for (nextHop in nextHops) {
-            val t = Transition(true, "${topologyPrefix}_T_" + source + "_" + nextHop)
+            val t = Transition(false, "${topologyPrefix}_T_" + source + "_" + nextHop)
             transitions.add(t)
             edgeToTopologyTransitionMap[source edge nextHop] = t
 
@@ -251,7 +251,7 @@ fun DFAToPetriGame(dfa: DFA<Switch>): DFAToPetriGame {
 
     var i = 0
     val actionToTransitionMap = dfa.allActions.associateWith {
-        Transition(true, "${dfaPrefix}_T${i++}_Switch${it.label}")
+        Transition(false, "${dfaPrefix}_T${i++}_Switch${it.label}")
     }
 
     for (aToT in actionToTransitionMap) {

@@ -35,14 +35,9 @@ fun genCombinedWaypointDFA(usm: UpdateSynthesisModel): DFA<Switch> {
 fun genReachabilityDFA(usm: UpdateSynthesisModel): DFA<Switch> =
     dfaOf<Switch>(usm.switches) { d ->
         val sI = d.state(initial = true)
-        val sJ = d.state()
         val sF = d.state(final = true)
 
-        sI.edgeTo(sJ, usm.reachability.initialNode)
-        sI.edgeToDead(usm.switches - setOf(usm.reachability.initialNode))
-
-        sJ.edgeTo(sF, usm.reachability.finalNode)
-
+        sI.edgeTo(sF, usm.reachability.finalNode)
         sF.edgeToDead(usm.switches)
     }
 

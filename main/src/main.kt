@@ -95,7 +95,6 @@ fun runProblem() {
         if (Options.drawGraphs) dfa.toGraphviz().toFile(File("${GRAPHICS_OUT}/dfa.svg"))
         v.Low.println("DFA generation time: ${time / 1000.0} seconds \nDFA states: ${dfa.states.size} \nDFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
 
-
         val cuspt = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfa))
         v.Minimal.println("Problem file: ${Options.testCase}\n" +
             "Switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it] }}\n" +
@@ -232,4 +231,33 @@ fun main(args: Array<String>) {
     Options.argParser.parse(args)
     if (Options.onlyDFAGen != null) generateDFA()
     else runProblem()
+}
+
+typealias Batch = Set<Int>
+typealias ConupSeq = List<Batch>
+fun <T> Collection<T>.powerset(): Set<Set<T>> = when {
+    isEmpty() -> setOf(setOf())
+    else -> drop(1).powerset().let { it + it.map { it + first() } }
+}
+
+fun <T> Collection<T>.powersetne(): Set<Set<T>> =
+    powerset().filter { it.isNotEmpty() }.toSet()
+fun sols(s: Set<Int>): Set<ConupSeq> =
+    if (s.isEmpty()) setOf()
+    else s.powersetne().flatMap {
+            ot: Batch ->
+        if ((s - ot).isNotEmpty())
+            sols(s - ot).map { listOf(ot) + it }.toSet()
+        else
+            setOf(listOf(ot))
+    }.toSet()
+
+fun test() {
+    val ls = 4
+    val switches = (1..ls).toSet()
+
+    println(switches.powersetne())
+
+    println(sols(switches).filter { it.first().contains(1) && it.last().contains(ls) })
+    println(sols(switches).filter { it.first().contains(1) && it.last().contains(ls) }.size)
 }
