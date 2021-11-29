@@ -25,7 +25,11 @@ def main(jsonPath, subpathsPath):
                 l.append(i)
             graph.subpaths.append(l)
 
+        t0 = time.clock()
         order = flip.compute_sequence(graph)
+        print 'Finished in ', time.clock() - t0, ' seconds'
+        print order
+
         order.verify()
 
 if __name__ == '__main__':

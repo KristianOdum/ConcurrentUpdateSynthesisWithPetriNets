@@ -6,7 +6,6 @@ import verification.Verifier
 import verification.sequentialSearch
 import java.io.File
 import java.lang.Integer.max
-import java.lang.Integer.min
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -92,6 +91,7 @@ fun runProblem() {
         var time: Long = measureTimeMillis {
             dfa = generateDFAFromUSMProperties(usm)
         }
+
         if (Options.drawGraphs) dfa.toGraphviz().toFile(File("${GRAPHICS_OUT}/dfa.svg"))
         v.Low.println("DFA generation time: ${time / 1000.0} seconds \nDFA states: ${dfa.states.size} \nDFA transitions: ${dfa.delta.entries.sumOf { it.value.size }}")
 
@@ -116,13 +116,17 @@ fun runProblem() {
         subproblems@for ((i, subcuspt) in subcuspts.withIndex()) {
             v.High.println("-- Solving subproblem $i --")
 
+            val eqclasses = discoverEquivalenceClasses(subcuspt)
+
+            v.High.println(eqclasses.toString())
+
             val modelPath = kotlin.io.path.createTempFile("pnml_model$i")
 
             val petriGame: PetriGame
             val queryPath: Path
             val updateSwitchCount: Int
             time = measureTimeMillis {
-                val (_petriGame, _queryPath, _updateSwitchCount) = generatePetriGameFromCUSPT(subcuspt)
+                val (_petriGame, _queryPath, _updateSwitchCount) = generatePetriGameFromCUSPT(subcuspt, eqclasses)
                 petriGame = _petriGame
                 queryPath = _queryPath
                 updateSwitchCount = _updateSwitchCount

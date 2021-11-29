@@ -1,7 +1,7 @@
 import translate.*
 import java.util.*
 
-typealias SCC = List<Int>
+typealias SCC = Set<Int>
 typealias SCCId = Int
 
 fun topologicalDecomposition(cuspt: CUSPT): List<CUSPT> {
@@ -71,8 +71,8 @@ fun topologicalDecomposition(cuspt: CUSPT): List<CUSPT> {
         CUSPT(
             sp.initSwitch,
             sp.finalSwitch,
-            cuspt.initialRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches },
-            cuspt.finalRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches },
+            cuspt.initialRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches } + mapOf(sp.finalSwitch to setOf()),
+            cuspt.finalRouting.filter { it.key != sp.finalSwitch && it.key in sp.switches } + mapOf(sp.finalSwitch to setOf()),
             dfa intersect subreachability
         )
     }
@@ -135,7 +135,10 @@ fun <T> canReachGoalFromState(dfa: DFA<T>, state: DFAState, blacklistedLabels: S
     return aux(state)
 }
 
+private val _ptos = mutableMapOf<CUSPT, List<SCC>>()
 fun partialTopologicalOrder(cuspt: CUSPT): List<SCC> {
+    if (cuspt in _ptos) return _ptos[cuspt]!!
+
     data class NodeInfo(var index: Int, var lowlink: Int, var onStack: Boolean)
     data class Edge(val source: Switch, val target: Switch)
 
@@ -184,5 +187,5 @@ fun partialTopologicalOrder(cuspt: CUSPT): List<SCC> {
         }
     }
 
-    return sccs.map { Pair(scc - it.value, it.key) }.groupBy { it.first }.toList().sortedBy { it.first }.map { it.second.map { it.second } }
+    return sccs.map { Pair(scc - it.value, it.key) }.groupBy { it.first }.toList().sortedBy { it.first }.map { it.second.map { it.second }.toSet() }
 }

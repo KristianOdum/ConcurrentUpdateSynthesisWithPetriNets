@@ -3,6 +3,7 @@ package translate
 import PetriGame
 import Arc
 import CUSPT
+import EquivalenceClass
 import Place
 import Switch
 import Transition
@@ -10,7 +11,6 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
 import java.nio.file.Path
-import javax.swing.text.html.Option
 
 // Constants used for consistent naming
 const val dfaPrefix = "DFA"
@@ -30,7 +30,7 @@ private data class Edge(val from: Switch, val to: Switch) {
 
 private infix fun Switch.edge(other: Switch) = Edge(this, other)
 
-fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqClasses: Set<Set<Switch>>): PetriGameQueryPath {
+fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): PetriGameQueryPath {
     // Sets so duplicates cannot occur
     val places: MutableSet<Place> = mutableSetOf()
     val transitions: MutableSet<Transition> = mutableSetOf()
@@ -77,24 +77,19 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqClasses: Set<Set<Switch>>): Petri
         }
     }
 
-    // Initial and final equivalence classes
-    val onlyInFinal = cuspt.initialRouting.filter { it.value.isEmpty() }.map { it.key }.toSet()
-    val onlyInInitial = cuspt.finalRouting.filter { it.value.isEmpty() }.map { it.key }.toSet()
-
     // Switch Components
     // Find u \in V where R^i(u) != R^f(u)
 
     // Only switches that are different in final and initial routing
     val updatableSwitches = (cuspt.initialRouting.entries.toList() + cuspt.finalRouting.entries.toList())
-        .groupBy { it.key }.filter { it.value.size != 2 || it.value[0] != it.value[1] }.map { it.key }
+        .groupBy { it.key }.filter { it.value.size != 2 || it.value[0] != it.value[1] }.map { it.key }.toSet()
 
-    val updatableNonTrivialSwitches: Set<Int> =
-        updatableSwitches.filter { it !in onlyInFinal && it !in onlyInInitial }.toSet()
+    val updatableNonEQClass: Set<Switch> = updatableSwitches.toSet() - eqclasses.flatMap { it.switches }.toSet()
 
     // Update State Component
-    val numSwitchComponents = updatableNonTrivialSwitches.size + (if (onlyInInitial.isEmpty()) 0 else 1) + (if (onlyInFinal.isEmpty()) 0 else 1)
+    val numSwitchComponents = updatableNonEQClass.size + eqclasses.size
     val maxInBatch = if (Options.maxSwicthesInBatch != 0) Options.maxSwicthesInBatch else numSwitchComponents
-    val pCountInitialTokens = if (onlyInFinal.isEmpty()) 0 else 1
+    val pCountInitialTokens = eqclasses.count { it.batchOrder == BatchOrder.FIRST }
 
     val pQueueing = Place(1, "${updatePrefix}_P_QUEUEING").apply { places.add(this) }
     val pUpdating = Place(0, "${updatePrefix}_P_UPDATING").apply { places.add(this) }
@@ -103,7 +98,7 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqClasses: Set<Set<Switch>>): Petri
     val pCount = Place(pCountInitialTokens, "${updatePrefix}_P_COUNT").apply { places.add(this) }
     val pTotalQueued = Place(0, "${updatePrefix}_P_TOTAL_QUEUED").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
-    val tReady = Transition(true, "${updatePrefix}_T_READY").apply { transitions.add(this) }
+    val tReady = Transition(false, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
     arcs.add(Arc(pCount, tConup, 1))
     arcs.add(Arc(tConup, pCount, 1))
@@ -115,15 +110,8 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqClasses: Set<Set<Switch>>): Petri
     arcs.add(Arc(pInvCount, tReady, maxInBatch))
     arcs.add(Arc(tReady, pInvCount, maxInBatch))
 
-    val nontrivialSwitchComponentPG = mutableSetOf<PetriGame>()
-    for (s: Set<Switch> in updatableNonTrivialSwitches.map { setOf(it) }) {
-        nontrivialSwitchComponentPG += createSwitchComponent(s, false, false, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
-    }
-
-    val initialEqClassSwitchComponentPG = if (onlyInInitial.isEmpty()) null else createSwitchComponent(onlyInInitial, false, true, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
-    val finalEqClassSwitchComponentPG = if (onlyInFinal.isEmpty()) null else createSwitchComponent(onlyInFinal, true, false, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
-
-    for (pg in (nontrivialSwitchComponentPG + initialEqClassSwitchComponentPG + finalEqClassSwitchComponentPG).filterNotNull()) {
+    for (eqc in eqclasses + updatableNonEQClass.map { EquivalenceClass(setOf(it), BatchOrder.UNKNOWN) }) {
+        val pg = createSwitchComponent(eqc, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
         places.addAll(pg.places)
         transitions.addAll(pg.transitions)
         arcs.addAll(pg.arcs)
@@ -187,8 +175,8 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqClasses: Set<Set<Switch>>): Petri
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, numSwitchComponents)
 }
 
-private fun createSwitchComponent(s: Set<Switch>, onlyInFinal: Boolean, onlyInInitial: Boolean, cuspt: CUSPT, edgeToTopologyTransitionMap: Map<Edge, Transition>, switchComponentsFinalPlaces: MutableSet<Place>, pCount: Place, pInvCount: Place, pQueueing: Place, pUpdating: Place, pTotalQueued: Place, numSwitchComponents: Int): PetriGame {
-    val name = s.joinToString(separator = "_") { it.toString() }
+private fun createSwitchComponent(eqc: EquivalenceClass, cuspt: CUSPT, edgeToTopologyTransitionMap: Map<Edge, Transition>, switchComponentsFinalPlaces: MutableSet<Place>, pCount: Place, pInvCount: Place, pQueueing: Place, pUpdating: Place, pTotalQueued: Place, numSwitchComponents: Int): PetriGame {
+    val name = eqc.switches.joinToString(separator = "_") { it.toString() }
 
     val places = mutableSetOf<Place>()
     val transitions = mutableSetOf<Transition>()
@@ -196,9 +184,9 @@ private fun createSwitchComponent(s: Set<Switch>, onlyInFinal: Boolean, onlyInIn
 
     // Make sure the initial edge is different to its final correspondent
     val pInit = Place(1, "${switchPrefix}_P_${name}_INIT").apply { places.add(this) }
-    val pQueue = Place(if (onlyInFinal) 1 else 0, "${switchPrefix}_P_${name}_QUEUE").apply { places.add(this) }
+    val pQueue = Place(if (eqc.batchOrder == BatchOrder.FIRST) 1 else 0, "${switchPrefix}_P_${name}_QUEUE").apply { places.add(this) }
     val pFinal = Place(0, "${switchPrefix}_P_${name}_FINAL").apply { places.add(this); switchComponentsFinalPlaces.add(this) }
-    val pLimiter = Place(if (onlyInFinal) 0 else 1, "${switchPrefix}_P_${name}_LIMITER").apply { places.add(this) }
+    val pLimiter = Place(if (eqc.batchOrder == BatchOrder.FIRST) 0 else 1, "${switchPrefix}_P_${name}_LIMITER").apply { places.add(this) }
     val tQueue = Transition(true, "${switchPrefix}_T_${name}_QUEUE").apply { transitions.add(this) }
     val tUpdate = Transition(false, "${switchPrefix}_T_${name}_UPDATE").apply { transitions.add(this) }
 
@@ -219,11 +207,11 @@ private fun createSwitchComponent(s: Set<Switch>, onlyInFinal: Boolean, onlyInIn
     arcs.add(Arc(tUpdate, pInvCount, 1))
     arcs.add(Arc(tQueue, pTotalQueued, 1))
 
-    if (onlyInInitial) {
+    if (eqc.batchOrder == BatchOrder.LAST) {
         arcs.add(Arc(pTotalQueued, tQueue,))
     }
 
-    for (s_i in s) {
+    for (s_i in eqc.switches) {
         val initialNextHops = cuspt.initialRouting[s_i] ?: setOf()
         val finalNextHops = cuspt.finalRouting[s_i] ?: setOf()
 

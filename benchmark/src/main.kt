@@ -19,6 +19,7 @@ fun main(args: Array<String>) {
     println("Total ${ours.entries.size} ${flips.entries.size}")
     println("Solved ${solved.size}")
     println("Better in ${better.size}")
+    println("FLIP better in ${solved.filter { it.value.ours[Measure.Batches] as Int > it.value.flips[Measure.Batches] as Int }.size}")
     println("Flip uses TAM ${flips.values.filter { it[Measure.UsesTagAndMatch] as Boolean }.size}")
     println("Flip uses TAM but we don't: ${flipUsesTagAndMatchButWeDont.size}")
     println("Flip model too large: ${flips.values.count { it[Measure.ModelTooBig] == true }}")

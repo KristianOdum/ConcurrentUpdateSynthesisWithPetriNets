@@ -33,6 +33,8 @@ class DFAContext<T>(val alphabet: Set<T>) {
     class State<T>(val context: DFAContext<T>) {
         var id = context.sid++
 
+        override fun toString() = "State $id"
+
         fun edgeTo(other: State<T>, labels: Set<T>) {
             for (l in labels) {
                 context.actions[this]!![l] = other
