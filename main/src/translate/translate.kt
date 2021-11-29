@@ -251,7 +251,7 @@ fun DFAToPetriGame(dfa: DFA<Switch>): DFAToPetriGame {
 
     var i = 0
     val actionToTransitionMap = dfa.allActions.filter { it.label in dfa.relevantLabels() }.associateWith {
-        Transition(true, "${dfaPrefix}_T${i++}_Switch${it.label}")
+        Transition(false, "${dfaPrefix}_T${i++}_Switch${it.label}")
     }
 
     for (aToT in actionToTransitionMap) {
