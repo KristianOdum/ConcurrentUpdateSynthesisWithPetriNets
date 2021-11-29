@@ -7,9 +7,12 @@ data class OursFlipWithNull(val ours: Map<Measure, Any>?, val flips: Map<Measure
 fun main(args: Array<String>) {
     val ours = handleResultsOurs(Path.of("../output/ours")).map { it.path.pathString to it.fields }.toMap()//.filter { it.key.contains("synthethic_json") }
     val flips = handleResultsFlip(Path.of("../output/flip")).map { it.path.pathString to it.fields }.toMap()//.filter { it.key.contains("synthethic_json") }
+    val parakeet = handleResultsParakeet(Path.of("../output/parakeet"))
 
     val combined = ours.filter { it.key in flips }.map { (k, v) -> k to OursFlip(v, flips[k]!!) }.toMap()
     val combinedWithNulls = (ours.keys + flips.keys).map { it to OursFlipWithNull(ours[it], flips[it]) }.toMap()
+
+    val allCombined = ours.filter { it.key in flips  }
 
     val solved = combined.filterValues { it.ours[Measure.Batches] != null && it.flips[Measure.Batches] != null }
 

@@ -106,7 +106,7 @@ fun runProblem() {
 
         val subcuspts: List<CUSPT>
         time = measureTimeMillis {
-            subcuspts = topologicalDecomposition(cuspt)
+            subcuspts = if (Options.noTopologicalDecompositioning) listOf(cuspt) else topologicalDecomposition(cuspt)
         }
         v.Low.println("Decomposed topology into ${subcuspts.size} subproblems")
         v.Low.println("Topological decomposition took ${time / 1000.0} seconds")
@@ -116,7 +116,7 @@ fun runProblem() {
         subproblems@for ((i, subcuspt) in subcuspts.withIndex()) {
             v.High.println("-- Solving subproblem $i --")
 
-            val eqclasses = discoverEquivalenceClasses(subcuspt)
+            val eqclasses = if (Options.noEquivalenceClasses) setOf() else discoverEquivalenceClasses(subcuspt)
 
             v.High.println(eqclasses.toString())
 
@@ -224,6 +224,18 @@ object Options {
         fullName = "debugPrefix",
         description = "Output debugging files with the given prefix"
     )
+
+    val noTopologicalDecompositioning by argParser.option(
+        ArgType.Boolean,
+        shortName = "T",
+        description = "Disable topological decompositioning"
+    ).default(false)
+
+    val noEquivalenceClasses by argParser.option(
+        ArgType.Boolean,
+        shortName = "E",
+        description = "Disable equivalence classes"
+    ).default(false)
 
     val maxSwicthesInBatch by argParser.option(
         ArgType.Int,

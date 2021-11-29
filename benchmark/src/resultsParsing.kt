@@ -28,6 +28,11 @@ fun handleResultsFlip(outputDir: Path): List<TestData> =
         { s -> Measure.ModelTooBig to s.contains("""Model too large for size-limited license""")}
     ))
 
+fun handleResultsParakeet(outputDir: Path): List<TestData> =
+    parseResults(outputDir, listOf(
+        { s -> Measure.Batches to """size of batch sequence is: (\d+)""".toRegex().firstGroup(s)?.toInt()?.plus(1) }
+    ))
+
 fun parseResults(outputDir: Path, propertyParsers: List<(String) -> Pair<Measure, Any?>>) =
     outputDir.toFile().walk().filter { it.isFile && it.extension == "txt" }.map { tcOut ->
         val raw = tcOut.readText()

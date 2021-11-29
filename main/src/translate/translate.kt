@@ -138,27 +138,26 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
     // DFA tracking component
     val turnSwitch = Place(0, "${dfaPrefix}_TURN").apply { places.add(this) }
     val switchToTrackPlace = mutableMapOf<Switch, Place>()
-
-    for (s in cuspt.allSwitches) {
+    for (s in cuspt.policy.relevantLabels()) {
         val trackPlace = Place(0, "${dfaPrefix}_TRACK_Pswitch${s}")
         switchToTrackPlace[s] = trackPlace
     }
     places.addAll(switchToTrackPlace.values)
 
     // Create dfa actions transitions
-    for (action in cuspt.policy.allActions) {
+    for (action in cuspt.policy.allActions.filter { it.label in cuspt.policy.relevantLabels() }) {
         val dfaSwitchTransition = dfaActionToTransitionMap[action]!!
         arcs.add(Arc(switchToTrackPlace[action.label]!!, dfaSwitchTransition))
     }
 
-    for ((e, t) in edgeToTopologyTransitionMap) {
+    for ((e, t) in edgeToTopologyTransitionMap.filter { it.key.to in cuspt.policy.relevantLabels() }) {
         arcs.add(Arc(t, switchToTrackPlace[e.to]!!))
     }
 
     arcs.add(Arc(tInject, turnSwitch))
 
     // Arcs from turn place to topology transitions
-    for (t in edgeToTopologyTransitionMap.values)
+    for ((e, t) in edgeToTopologyTransitionMap.filter { it.key.to in cuspt.policy.relevantLabels() })
         arcs.add(Arc(turnSwitch, t))
 
     // Arcs from DFA transitions to turn place
@@ -235,10 +234,11 @@ data class DFAToPetriGame(val petriGame: PetriGame,
 fun DFAToPetriGame(dfa: DFA<Switch>): DFAToPetriGame {
     val arcs: MutableSet<Arc> = mutableSetOf()
 
+
     val stateToPlaceMap = dfa.states.associateWith { Place(if (it == dfa.initial) 1 else 0, "${dfaPrefix}_Pstate_${it}") }
 
     var i = 0
-    val actionToTransitionMap = dfa.allActions.associateWith {
+    val actionToTransitionMap = dfa.allActions.filter { it.label in dfa.relevantLabels() }.associateWith {
         Transition(false, "${dfaPrefix}_T${i++}_Switch${it.label}")
     }
 
@@ -371,4 +371,3 @@ fun generateQuery(mustBeFinalSwitchComponents: Set<Place>, finalDFAState: Place)
     query += ") or (${finalDFAState.name} = 1)))"
     return query
 }
-
