@@ -5,29 +5,37 @@ data class OursFlip(val ours: Map<Measure, Any>, val flips: Map<Measure, Any>)
 data class OursFlipWithNull(val ours: Map<Measure, Any>?, val flips: Map<Measure, Any>?)
 
 fun main(args: Array<String>) {
-    val ours = handleResultsOurs(Path.of("../output/ours")).map { it.path.pathString to it.fields }.toMap()//.filter { it.key.contains("synthethic_json") }
-    val flips = handleResultsFlip(Path.of("../output/flip")).map { it.path.pathString to it.fields }.toMap()//.filter { it.key.contains("synthethic_json") }
-    val parakeet = handleResultsParakeet(Path.of("../output/parakeet"))
+    val filter = "zoo_json"
 
-    val combined = ours.filter { it.key in flips }.map { (k, v) -> k to OursFlip(v, flips[k]!!) }.toMap()
-    val combinedWithNulls = (ours.keys + flips.keys).map { it to OursFlipWithNull(ours[it], flips[it]) }.toMap()
+    val ours = handleResultsOurs(Path.of("../new_output/all")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_no_eq_no_td = handleResultsOurs(Path.of("../new_output/no_eq_no_td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_no_td = handleResultsOurs(Path.of("../new_output/no_td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
 
-    val allCombined = ours.filter { it.key in flips  }
+    val flips = handleResultsFlip(Path.of("../new_output/flip")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val parakeet = handleResultsParakeet(Path.of("../output/parakeet")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
 
-    val solved = combined.filterValues { it.ours[Measure.Batches] != null && it.flips[Measure.Batches] != null }
+    val combined = ours.filter { it.key in flips }.map { (k, v) -> k to mapOf("ours" to v, "flip" to flips[k]!!) }.toMap()
+    val oursCombined = ours.filter { it.key in ours }
+        .map { (k,v) -> k to mapOf("ours" to v, "ours_no_eq_no_td" to ours_no_eq_no_td[k]!!, "ours_no_td" to ours_no_td[k]!!) }.toMap()
 
-    val better = solved.filter { it.value.flips[Measure.Batches] as Int > it.value.ours[Measure.Batches] as Int }
-    val flipUsesTagAndMatchButWeDont = solved.filter { (it.value.flips[Measure.UsesTagAndMatch] ?: false) as Boolean }
+    val solved = combined.filterValues { it["ours"]!![Measure.Batches] != null && it["flip"]!![Measure.Batches] != null }
+
+    val better = solved.filter { it.value["flip"]!![Measure.Batches] as Int > it.value["ours"]!![Measure.Batches] as Int }
+    val flipUsesTagAndMatchButWeDont = solved.filter { (it.value["flip"]!![Measure.UsesTagAndMatch] ?: false) as Boolean }
 
     println("Total ${ours.entries.size} ${flips.entries.size}")
     println("Solved ${solved.size}")
     println("Better in ${better.size}")
-    println("FLIP better in ${solved.filter { it.value.ours[Measure.Batches] as Int > it.value.flips[Measure.Batches] as Int }.size}")
+    println("FLIP better in ${solved.filter { it.value["ours"]!![Measure.Batches] as Int > it.value["flip"]!![Measure.Batches] as Int }.size}")
     println("Flip uses TAM ${flips.values.filter { it[Measure.UsesTagAndMatch] as Boolean }.size}")
     println("Flip uses TAM but we don't: ${flipUsesTagAndMatchButWeDont.size}")
     println("Flip model too large: ${flips.values.count { it[Measure.ModelTooBig] == true }}")
 
-    println(cactusPlotTime(combinedWithNulls))
+    println()
+    println(cactusPlotTimeString(combined))
+
+    println()
+    println(cactusPlotTimeString(oursCombined))
 
     println(ours.entries.maxByOrNull { (it.value[Measure.TotalTime] ?: 0.0) as Double } )
     //val a = aggregateBy(res) { Path.of(it.path).parent.name }

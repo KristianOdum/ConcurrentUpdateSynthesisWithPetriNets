@@ -96,7 +96,7 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
     val pBatches = Place(0, "${updatePrefix}_P_BATCHES").apply { places.add(this) }
     val pInvCount = Place(maxInBatch - pCountInitialTokens, "${updatePrefix}_P_INVCOUNT").apply { places.add(this) }
     val pCount = Place(pCountInitialTokens, "${updatePrefix}_P_COUNT").apply { places.add(this) }
-    val pTotalQueued = Place(0, "${updatePrefix}_P_TOTAL_QUEUED").apply { places.add(this) }
+    val pTotalQueued = Place(eqclasses.count { it.batchOrder == BatchOrder.FIRST }, "${updatePrefix}_P_TOTAL_QUEUED").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(false, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
@@ -207,7 +207,8 @@ private fun createSwitchComponent(eqc: EquivalenceClass, cuspt: CUSPT, edgeToTop
     arcs.add(Arc(tQueue, pTotalQueued, 1))
 
     if (eqc.batchOrder == BatchOrder.LAST) {
-        arcs.add(Arc(pTotalQueued, tQueue,))
+        // This assumes at most 1 LAST batch
+        arcs.add(Arc(pTotalQueued, tQueue, numSwitchComponents - 1))
     }
 
     for (s_i in eqc.switches) {

@@ -73,10 +73,12 @@ fun generateCUSPTFromCUSP(cusp: CUSP) =
         -2,
         cusp.initialRouting
                 + mapOf(-1 to cusp.ingressSwitches)
-                + cusp.egressSwitches.associateWith { setOf(-2) },
+                + cusp.egressSwitches.associateWith { setOf(-2) }
+                + mapOf(-2 to setOf()),
         cusp.finalRouting
                 + mapOf(-1 to cusp.ingressSwitches)
-                + cusp.egressSwitches.associateWith { setOf(-2) },
+                + cusp.egressSwitches.associateWith { setOf(-2) }
+                + mapOf(-2 to setOf()),
         cusp.policy,
     )
 
@@ -118,7 +120,7 @@ fun runProblem() {
 
             val eqclasses = if (Options.noEquivalenceClasses) setOf() else discoverEquivalenceClasses(subcuspt)
 
-            v.High.println(eqclasses.toString())
+            v.High.println(eqclasses.joinToString("\n"))
 
             val modelPath = kotlin.io.path.createTempFile("pnml_model$i")
 
@@ -247,7 +249,7 @@ object Options {
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
-const val version = "1.3"
+const val version = "1.4"
 
 fun main(args: Array<String>) {
     println("Version: $version \n ${args.joinToString(" ")}")
