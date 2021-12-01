@@ -1,5 +1,6 @@
 package verification
 
+import Batch
 import Options
 import println
 import java.nio.file.Path
@@ -8,8 +9,8 @@ import kotlin.math.roundToInt
 import kotlin.system.measureTimeMillis
 
 class Verifier(val modelPath: Path) {
-    fun verifyQuery(queryPath: String): Boolean {
-        val command = "${Options.enginePath.toAbsolutePath()} ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0"
+    fun verifyQuery(queryPath: String): Pair<Boolean, String?> {
+        val command = "${Options.enginePath.toAbsolutePath()} --strategy-output _ ${modelPath.toAbsolutePath()} $queryPath -q 0 -r 0"
         if (Options.outputVerifyPN)
             v.High.println(command)
         val pro = Runtime.getRuntime().exec(command)
@@ -18,22 +19,24 @@ class Verifier(val modelPath: Path) {
         if (Options.outputVerifyPN)
             v.High.println(output)
 
-        return if (output.contains("is satisfied"))
-            true
-        else if (output.contains("is NOT satisfied"))
-            false
+        return if (output.contains("is satisfied")) {
+            val from = output.lastIndexOf("##BEGIN STRATEGY##")
+            val to = output.indexOf("##END STRATEGY##")
+            Pair(true, output.substring(from, to))
+        } else if (output.contains("is NOT satisfied"))
+            Pair(false, null)
         else {
             v.Low.println(pro.errorStream.readAllBytes().map { Char(it.toInt()) }.joinToString(""))
-            throw Exception()
+            throw OutOfMemoryError("VerifyPN ran out of memory")
         }
     }
 }
 
-fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int {
-    var batches = Int.MAX_VALUE
+fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): List<Batch>? {
     var case: Int
 
     var verified: Boolean
+    var strategy: String? = null
     var query = queryPath.toFile().readText()
     val tempQueryFile = kotlin.io.path.createTempFile("query").toFile()
     var time: Long
@@ -42,13 +45,14 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int 
     query = query.replace("UPDATE_P_BATCHES <= [0-9]*".toRegex(), "UPDATE_P_BATCHES <= $upperBound")
     tempQueryFile.writeText(query)
     time = measureTimeMillis {
-        verified = verifier.verifyQuery(tempQueryFile.path)
+        val (v, s) = verifier.verifyQuery(tempQueryFile.path)
+        verified = v
+        if (v)
+            strategy = s
     }
     v.High.println("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $upperBound batches")
 
     if (verified) {
-        batches = upperBound
-
         if (upperBound > 5) {
             case = 5
         } else if (upperBound == 5) {
@@ -63,13 +67,15 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int 
             tempQueryFile.writeText(query)
 
             time = measureTimeMillis {
-                verified = verifier.verifyQuery(tempQueryFile.path)
+                val (v, s) = verifier.verifyQuery(tempQueryFile.path)
+                verified = v
+                if (v)
+                    strategy = s
             }
 
             v.High.println("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches\n")
 
             if (verified) {
-                batches = case
                 case -= 1
             } else if (!verified and (case == 5)) {
                 case = upperBound - 1
@@ -86,13 +92,15 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int 
                 tempQueryFile.writeText(query)
 
                 time = measureTimeMillis {
-                    verified = verifier.verifyQuery(tempQueryFile.path)
+                    val (v, s) = verifier.verifyQuery(tempQueryFile.path)
+                    verified = v
+                    if (v)
+                        strategy = s
                 }
 
                 v.High.println("Verification ${if (verified) "succeeded" else "failed"} in ${time / 1000.0} seconds with <= $case batches")
 
                 if (verified) {
-                    batches = case
                     case -= 1
                 }
                 if (!verified) {
@@ -102,5 +110,5 @@ fun sequentialSearch(verifier: Verifier, queryPath: Path, upperBound: Int): Int 
         }
     }
 
-    return batches
+    return if (strategy != null) getUpdateBatchesFromStrategy(strategy!!) else null
 }

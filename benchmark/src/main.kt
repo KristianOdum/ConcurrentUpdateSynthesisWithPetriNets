@@ -38,5 +38,6 @@ fun main(args: Array<String>) {
     println(cactusPlotTimeString(oursCombined))
 
     println(ours.entries.maxByOrNull { (it.value[Measure.TotalTime] ?: 0.0) as Double } )
+    println(combined.entries.maxByOrNull { (it.value["flip"]!![Measure.Batches]) as Int } )
     //val a = aggregateBy(res) { Path.of(it.path).parent.name }
 }
