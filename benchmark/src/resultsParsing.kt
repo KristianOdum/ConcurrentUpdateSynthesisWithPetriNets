@@ -30,7 +30,8 @@ fun handleResultsFlip(outputDir: Path): List<TestData> =
 
 fun handleResultsParakeet(outputDir: Path): List<TestData> =
     parseResults(outputDir, listOf(
-        { s -> Measure.Batches to """size of batch sequence is: (\d+)""".toRegex().firstGroup(s)?.toInt()?.plus(1) }
+        { s -> Measure.Batches to (if ("""Network Failed""".toRegex().containsMatchIn(s)) null else """"size of batch sequence is: (\d+)""".toRegex().firstGroup(s)?.toInt()) },
+        { s -> Measure.TotalTime to """elapsedTime:  (\d+\.\d+)""".toRegex().firstGroup(s)?.toDouble() }
     ))
 
 fun parseResults(outputDir: Path, propertyParsers: List<(String) -> Pair<Measure, Any?>>) =

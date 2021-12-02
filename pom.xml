@@ -40,13 +40,6 @@
                         <plugin>kotlinx-serialization</plugin>
                     </compilerPlugins>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-serialization</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
         </plugins>
     </build>
@@ -60,11 +53,6 @@
             <groupId>guru.nidi</groupId>
             <artifactId>graphviz-kotlin</artifactId>
             <version>0.18.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.leibnizcenter</groupId>
-            <artifactId>nfa</artifactId>
-            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.redundent</groupId>

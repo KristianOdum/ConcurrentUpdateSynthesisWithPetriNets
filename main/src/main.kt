@@ -73,10 +73,12 @@ fun generateCUSPTFromCUSP(cusp: CUSP) =
         -2,
         cusp.initialRouting
                 + mapOf(-1 to cusp.ingressSwitches)
-                + cusp.egressSwitches.associateWith { setOf(-2) },
+                + cusp.egressSwitches.associateWith { setOf(-2) }
+                + mapOf(-2 to setOf()),
         cusp.finalRouting
                 + mapOf(-1 to cusp.ingressSwitches)
-                + cusp.egressSwitches.associateWith { setOf(-2) },
+                + cusp.egressSwitches.associateWith { setOf(-2) }
+                + mapOf(-2 to setOf()),
         cusp.policy,
     )
 
@@ -111,14 +113,15 @@ fun runProblem() {
         v.Low.println("Decomposed topology into ${subcuspts.size} subproblems")
         v.Low.println("Topological decomposition took ${time / 1000.0} seconds")
 
-        var totalMinimum = 0
+        var omega = listOf<Batch>()
+        var unsolvable = false
 
         subproblems@for ((i, subcuspt) in subcuspts.withIndex()) {
             v.High.println("-- Solving subproblem $i --")
 
             val eqclasses = if (Options.noEquivalenceClasses) setOf() else discoverEquivalenceClasses(subcuspt)
 
-            v.High.println(eqclasses.toString())
+            v.High.println(eqclasses.joinToString("\n"))
 
             val modelPath = kotlin.io.path.createTempFile("pnml_model$i")
 
@@ -150,21 +153,35 @@ fun runProblem() {
             val verifier: Verifier
             time = measureTimeMillis {
                 verifier = Verifier(modelPath)
-                val batches = sequentialSearch(verifier, queryPath, updateSwitchCount)
-                if (batches == Int.MAX_VALUE) {
-                    v.Low.println("Subproblem $i unsolvable!")
-                } else {
-                    v.High.println("Subproblem $i solvable with minimum $batches batches.")
+                val ub = sequentialSearch(verifier, queryPath, updateSwitchCount)
+                val omegaPrime = ub?.mapIndexed { i, b ->
+                    if (i == 0)
+                        b union eqclasses.filter { it.batchOrder == BatchOrder.FIRST }.fold(setOf()) { acc, a -> acc union a.switches }
+                    else if (i == ub.size - 1)
+                        b union eqclasses.filter { it.batchOrder == BatchOrder.LAST }.fold(setOf()) { acc, a -> acc union a.switches }
+                    else
+                        b
                 }
-                totalMinimum = max(totalMinimum, batches)
+
+                if (omegaPrime == null) {
+                    v.Low.println("Subproblem $i unsolvable!")
+                    unsolvable = true
+                } else {
+                    v.High.println("Subproblem $i solvable with minimum ${omegaPrime.size} batches.")
+                    v.High.println("$omegaPrime")
+                    omega = (0 until max(omega.size, omegaPrime.size))
+                        .map { omega.getOrElse(it) { setOf() } union omegaPrime.getOrElse(it) { setOf() } }
+                }
             }
             v.High.println("Subproblem verification time: ${time / 1000.0} seconds")
+            if (unsolvable) break@subproblems
         }
 
-        if (totalMinimum == Int.MAX_VALUE) {
+        if (unsolvable) {
             v.Minimal.println("Problem is unsolvable!")
         } else {
-            v.Minimal.println("Minimum batches required: $totalMinimum")
+            v.Minimal.println("Minimum batches required: ${omega.size}")
+            v.Low.println("$omega")
         }
     }
     v.Minimal.println("Total program runtime: ${time / 1000.0} seconds")
@@ -247,7 +264,7 @@ object Options {
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
-const val version = "1.3"
+const val version = "1.4"
 
 fun main(args: Array<String>) {
     println("Version: $version \n ${args.joinToString(" ")}")

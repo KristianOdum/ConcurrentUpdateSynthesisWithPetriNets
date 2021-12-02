@@ -1,7 +1,10 @@
 
 
 enum class BatchOrder { UNKNOWN, FIRST, LAST}
-data class EquivalenceClass(val switches: Set<Switch>, val batchOrder: BatchOrder)
+data class EquivalenceClass(val switches: Set<Switch>, val batchOrder: BatchOrder) {
+    override fun toString() = "Equivalence class (${switches}) $batchOrder"
+}
+
 
 fun discoverEquivalenceClasses(cuspt: CUSPT): Set<EquivalenceClass> {
     val i = onlyInInitial(cuspt)
@@ -36,5 +39,6 @@ fun chainEQC(cuspt: CUSPT) =
         .filter { it.size >= 4 } // The SCC must be of size at least 4 to gain anything from it, since 2 of the switches
                                 // will not be in the eq class
         .map { scc -> Pair(scc.filter { !(cuspt.initialRouting[it]!! allIn scc && cuspt.finalRouting[it]!! allIn scc) }, scc) }
+        .map { Pair(it.first, it.second.filter { cuspt.initialRouting[it] != cuspt.finalRouting[it] }.toSet())}
         .filter { it.first.size == 2 }
         .map { EquivalenceClass(it.second - it.first, BatchOrder.UNKNOWN) }.toSet()
