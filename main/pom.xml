@@ -16,7 +16,6 @@
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
         <kotlin.version>1.5.31</kotlin.version>
         <slf4j.version>1.7.32</slf4j.version>
-        <serialization.version>1.2.2</serialization.version>
     </properties>
 
     <artifactId>main</artifactId>
@@ -36,17 +35,7 @@
                         <goals><goal>compile</goal></goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <compilerPlugins>
-                        <plugin>kotlinx-serialization</plugin>
-                    </compilerPlugins>
-                </configuration>
                 <dependencies>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-serialization</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
                     <dependency>
                         <groupId>org.junit.jupiter</groupId>
                         <artifactId>junit-jupiter</artifactId>

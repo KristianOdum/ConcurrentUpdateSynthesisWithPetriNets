@@ -5,6 +5,12 @@ data class OursFlip(val ours: Map<Measure, Any>, val flips: Map<Measure, Any>)
 data class OursFlipWithNull(val ours: Map<Measure, Any>?, val flips: Map<Measure, Any>?)
 
 fun main(args: Array<String>) {
+    val createNewZoo = true
+    if (createNewZoo) {
+        addRandomWaypointsToNetworks(2, """data/zoo_json""", 4)
+        return
+    }
+
     val ours = handleResultsOurs(Path.of("../output/ours")).map { it.path.pathString to it.fields }.toMap()//.filter { it.key.contains("synthethic_json") }
     val flips = handleResultsFlip(Path.of("../output/flip")).map { it.path.pathString to it.fields }.toMap()//.filter { it.key.contains("synthethic_json") }
     val parakeet = handleResultsParakeet(Path.of("../output/parakeet"))
@@ -31,4 +37,5 @@ fun main(args: Array<String>) {
 
     println(ours.entries.maxByOrNull { (it.value[Measure.TotalTime] ?: 0.0) as Double } )
     //val a = aggregateBy(res) { Path.of(it.path).parent.name }
+
 }
