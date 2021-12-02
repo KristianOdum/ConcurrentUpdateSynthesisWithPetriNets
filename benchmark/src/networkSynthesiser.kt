@@ -38,7 +38,6 @@ fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: Path, rand
         val newUsm = usm.addWaypoints(newWaypoints)
         assert(newUsm.waypoint.waypoints.size == newUsm.waypoint.waypoints.distinct().size)
         assert(newUsm.waypoint.waypoints.size == usm.waypoint.waypoints.size + numMoreWaypoints)
-        assert(newUsm.waypoint.waypoints.size == 3)
 
         val jElem = Json.encodeToJsonElement(newUsm)
 
