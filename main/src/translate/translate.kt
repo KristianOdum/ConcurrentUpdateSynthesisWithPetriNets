@@ -97,6 +97,7 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
     val pInvCount = Place(maxInBatch - pCountInitialTokens, "${updatePrefix}_P_INVCOUNT").apply { places.add(this) }
     val pCount = Place(pCountInitialTokens, "${updatePrefix}_P_COUNT").apply { places.add(this) }
     val pTotalQueued = Place(eqclasses.count { it.batchOrder == BatchOrder.FIRST }, "${updatePrefix}_P_TOTAL_QUEUED").apply { places.add(this) }
+    val pInvTotalUpdated = Place(numSwitchComponents, "${updatePrefix}_P_INV_TOTAL_UPDATED").apply { places.add(this) }
     val tConup = Transition(true, "${updatePrefix}_T_CONUP").apply { transitions.add(this) }
     val tReady = Transition(false, "${updatePrefix}_T_READY").apply { transitions.add(this) }
 
@@ -109,9 +110,11 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
     arcs.add(Arc(tReady, pQueueing, 1))
     arcs.add(Arc(pInvCount, tReady, maxInBatch))
     arcs.add(Arc(tReady, pInvCount, maxInBatch))
+    arcs.add(Arc(tReady, pInvTotalUpdated, 1))
+    arcs.add(Arc(pInvTotalUpdated, tReady, 1))
 
     for (eqc in eqclasses + updatableNonEQClass.map { EquivalenceClass(setOf(it), BatchOrder.UNKNOWN) }) {
-        val pg = createSwitchComponent(eqc, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, numSwitchComponents)
+        val pg = createSwitchComponent(eqc, cuspt, edgeToTopologyTransitionMap, switchComponentsFinalPlaces, pCount, pInvCount, pQueueing, pUpdating, pTotalQueued, pInvTotalUpdated, numSwitchComponents)
         places.addAll(pg.places)
         transitions.addAll(pg.transitions)
         arcs.addAll(pg.arcs)
@@ -169,12 +172,12 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
     val queryPath = kotlin.io.path.createTempFile("query")
     val DFAFinalStatePlace = dfaStateToPlaceMap[cuspt.policy.finals.single()]!!
 
-    queryPath.toFile().writeText(generateQuery(switchComponentsFinalPlaces, DFAFinalStatePlace))
+    queryPath.toFile().writeText(generateQuery(DFAFinalStatePlace))
 
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, numSwitchComponents)
 }
 
-private fun createSwitchComponent(eqc: EquivalenceClass, cuspt: CUSPT, edgeToTopologyTransitionMap: Map<Edge, Transition>, switchComponentsFinalPlaces: MutableSet<Place>, pCount: Place, pInvCount: Place, pQueueing: Place, pUpdating: Place, pTotalQueued: Place, numSwitchComponents: Int): PetriGame {
+private fun createSwitchComponent(eqc: EquivalenceClass, cuspt: CUSPT, edgeToTopologyTransitionMap: Map<Edge, Transition>, switchComponentsFinalPlaces: MutableSet<Place>, pCount: Place, pInvCount: Place, pQueueing: Place, pUpdating: Place, pTotalQueued: Place, pInvTotalUpdated: Place, numSwitchComponents: Int): PetriGame {
     val name = eqc.switches.joinToString(separator = "_") { it.toString() }
 
     val places = mutableSetOf<Place>()
@@ -205,6 +208,7 @@ private fun createSwitchComponent(eqc: EquivalenceClass, cuspt: CUSPT, edgeToTop
     arcs.add(Arc(tUpdate, pUpdating, 1))
     arcs.add(Arc(tUpdate, pInvCount, 1))
     arcs.add(Arc(tQueue, pTotalQueued, 1))
+    arcs.add(Arc(pInvTotalUpdated, tUpdate, 1))
 
     if (eqc.batchOrder == BatchOrder.LAST) {
         // This assumes at most 1 LAST batch
@@ -362,13 +366,5 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame): String {
     return res
 }
 
-fun generateQuery(mustBeFinalSwitchComponents: Set<Place>, finalDFAState: Place): String {
-    var query = "EF (UPDATE_P_BATCHES <= 0 and ((UPDATE_P_QUEUEING = 1"
-
-    for (place in mustBeFinalSwitchComponents) {
-        query += " and ${place.name} = 1"
-    }
-
-    query += ") or (${finalDFAState.name} = 1)))"
-    return query
-}
+fun generateQuery(finalDFAState: Place) =
+        "EF (UPDATE_P_BATCHES <= 0 and ${finalDFAState.name} = 1)"
