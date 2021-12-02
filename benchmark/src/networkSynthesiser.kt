@@ -3,13 +3,16 @@ import kotlinx.serialization.json.encodeToJsonElement
 import translate.UpdateSynthesisModel
 import translate.updateSynthesisModelFromJsonText
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.div
+import kotlin.io.path.pathString
 import kotlin.random.Random
 
-fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: String, randomSeed: Int) {
+fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: Path, randomSeed: Int) {
     val random = Random(randomSeed)
-    val dir = File(pathToFolder)
+    val dir = pathToFolder.toFile()
     assert(dir.isDirectory)
-    val newDir = File(pathToFolder + "_plus${numMoreWaypoints}")
+    val newDir = Path.of(pathToFolder.pathString + "_plus${numMoreWaypoints}").toFile()
     if (!newDir.exists())
         newDir.mkdir()
 
@@ -28,8 +31,8 @@ fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: String, ra
         val newFile = File(newPath)
         if (!newFile.exists())
             newFile.createNewFile()
-        else
-            newFile.writeText(jElem.toString())
+
+        newFile.writeText(jElem.toString())
 
         println("Added $numMoreWaypoints to ${file.name}")
     }

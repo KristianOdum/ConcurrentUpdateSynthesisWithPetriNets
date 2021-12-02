@@ -7,7 +7,7 @@ data class OursFlipWithNull(val ours: Map<Measure, Any>?, val flips: Map<Measure
 fun main(args: Array<String>) {
     val createNewZoo = true
     if (createNewZoo) {
-        addRandomWaypointsToNetworks(2, """data/zoo_json""", 4)
+        addRandomWaypointsToNetworks(2, Path.of("""artefact/data/zoo_json"""), 0)
         return
     }
     val filter = "zoo_json"
