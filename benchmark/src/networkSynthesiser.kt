@@ -2,6 +2,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import translate.UpdateSynthesisModel
 import translate.updateSynthesisModelFromJsonText
+import java.awt.font.FontRenderContext
 import java.io.File
 import kotlin.random.Random
 
@@ -13,14 +14,28 @@ fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: String, ra
     if (!newDir.exists())
         newDir.mkdir()
 
-    for (file in dir.walk().iterator()) {
+    files@for (file in dir.walk().iterator()) {
         if (file.isDirectory)
             continue
         val usm = updateSynthesisModelFromJsonText(file.readText())
-        val candidateSwitches = usm.switches
-        candidateSwitches.toMutableList().removeAll(usm.waypoint.waypoints)
 
-        val newUsm = usm.addWaypoint(candidateSwitches.sorted()[random.nextInt(usm.switches.size)])
+        val candidateSwitches = usm.initialRouting.filter { i_it -> usm.finalRouting.map { it.source }.contains(i_it.source) }.map { it.source }.toMutableList()
+        candidateSwitches -= usm.waypoint.waypoints
+
+        val newWaypoints = mutableListOf<Int>()
+        for (i in 1..numMoreWaypoints) {
+            if (candidateSwitches.isEmpty()) {
+                println("Could not add $numMoreWaypoints to ${file.name}")
+                continue@files
+            }
+            val new = candidateSwitches.sorted()[random.nextInt(candidateSwitches.size)]
+            newWaypoints += new
+            candidateSwitches -= new
+        }
+        val newUsm = usm.addWaypoints(newWaypoints)
+        assert(newUsm.waypoint.waypoints.size == newUsm.waypoint.waypoints.distinct().size)
+        assert(newUsm.waypoint.waypoints.size == usm.waypoint.waypoints.size + numMoreWaypoints)
+        assert(newUsm.waypoint.waypoints.size == 3)
 
         val jElem = Json.encodeToJsonElement(newUsm)
 
@@ -28,17 +43,17 @@ fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: String, ra
         val newFile = File(newPath)
         if (!newFile.exists())
             newFile.createNewFile()
-        else
-            newFile.writeText(jElem.toString())
+        newFile.writeText(jElem.toString())
+
 
         println("Added $numMoreWaypoints to ${file.name}")
     }
 }
 
-fun UpdateSynthesisModel.addWaypoint(s: Int): UpdateSynthesisModel {
+fun UpdateSynthesisModel.addWaypoints(waypoints: List<Int>): UpdateSynthesisModel {
     val initRouting = this.initialRouting.map { listOf(it.source, it.target) }.toSet()
     val finalRouting = this.finalRouting.map { listOf(it.source, it.target) }.toSet()
-    val newWaypoint = UpdateSynthesisModel.Waypoint(this.reachability.initialNode, this.reachability.finalNode, this.waypoint.waypoints + listOf(s))
+    val newWaypoint = UpdateSynthesisModel.Waypoint(this.reachability.initialNode, this.reachability.finalNode, this.waypoint.waypoints + waypoints)
     val properties = UpdateSynthesisModel.Properties(newWaypoint, this.loopFreedom, this.reachability)
 
     return UpdateSynthesisModel(initRouting, finalRouting, properties)
