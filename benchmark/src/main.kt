@@ -5,23 +5,26 @@ data class OursFlip(val ours: Map<Measure, Any>, val flips: Map<Measure, Any>)
 data class OursFlipWithNull(val ours: Map<Measure, Any>?, val flips: Map<Measure, Any>?)
 
 fun main(args: Array<String>) {
-    val createNewZoo = true
+    val createNewZoo = false
     if (createNewZoo) {
-        addRandomWaypointsToNetworks(2, Path.of("""artefact/data/zoo_json"""), 0)
+        addRandomWaypointsToNetworks(7, Path.of("""artefact/data/zoo_json"""), 0)
         return
     }
     val filter = "zoo_json"
 
-    val ours = handleResultsOurs(Path.of("../new_output/all")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
-    val ours_no_eq_no_td = handleResultsOurs(Path.of("../new_output/no_eq_no_td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
-    val ours_no_td = handleResultsOurs(Path.of("../new_output/no_td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours = handleResultsOurs(Path.of("../output/all")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_chain= handleResultsOurs(Path.of("../output/td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_if = handleResultsOurs(Path.of("../output/")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_td = handleResultsOurs(Path.of("../output/")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_none = handleResultsOurs(Path.of("../output/")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
 
-    val flips = handleResultsFlip(Path.of("../new_output/flip")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+
+    val flips = handleResultsFlip(Path.of("../output/flip")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
     val parakeet = handleResultsParakeet(Path.of("../output/parakeet")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
 
     val combined = ours.filter { it.key in flips }.map { (k, v) -> k to mapOf("ours" to v, "flip" to flips[k]!!) }.toMap()
     val oursCombined = ours.filter { it.key in ours }
-        .map { (k,v) -> k to mapOf("ours" to v, "ours_no_eq_no_td" to ours_no_eq_no_td[k]!!, "ours_no_td" to ours_no_td[k]!!) }.toMap()
+        .map { (k,v) -> k to mapOf("ours" to v, "ours_chain" to ours_chain[k]!!, "ours_if" to ours_if[k]!!, "ours_td" to ours_td[k]!!, "ours_none" to ours_none[k]!!) }.toMap()
 
     val solved = combined.filterValues { it["ours"]!![Measure.Batches] != null && it["flip"]!![Measure.Batches] != null }
 

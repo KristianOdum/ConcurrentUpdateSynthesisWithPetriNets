@@ -62,8 +62,10 @@ fun generateCUSPFromUSM(usm: UpdateSynthesisModel, dfa: DFA<Switch>) =
     CUSP(
         setOf(usm.reachability.initialNode),
         setOf(usm.reachability.finalNode),
-        usm.switches.associateWith { s -> setOf((usm.initialRouting.find { it.source == s } ?: return@associateWith setOf<Switch>()).target) },
-        usm.switches.associateWith { s -> setOf((usm.finalRouting.find { it.source == s } ?: return@associateWith setOf<Switch>()).target) },
+        usm.switches.associateWith { s ->
+            usm.initialRouting.filter { it.source == s }.map { it.target }.toSet() },
+        usm.switches.associateWith { s ->
+            usm.finalRouting.filter { it.source == s }.map { it.target }.toSet() },
         dfa
     )
 
@@ -99,9 +101,7 @@ fun runProblem() {
 
         val cuspt = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfa))
         v.Minimal.println("Problem file: ${Options.testCase}\n" +
-            "Switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it] }}\n" +
-            "Nontrivial switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it]
-                && cuspt.initialRouting[it]!!.isNotEmpty() && cuspt.finalRouting[it]!!.isNotEmpty() }}"
+            "Switches to update: ${cuspt.allSwitches.count { cuspt.initialRouting[it] != cuspt.finalRouting[it] }}\n"
         )
 
         if (Options.drawGraphs) outputPrettyNetwork(usm).toFile(File("${GRAPHICS_OUT}/network.svg"))
@@ -119,7 +119,7 @@ fun runProblem() {
         subproblems@for ((i, subcuspt) in subcuspts.withIndex()) {
             v.High.println("-- Solving subproblem $i --")
 
-            val eqclasses = if (Options.noEquivalenceClasses) setOf() else discoverEquivalenceClasses(subcuspt)
+            val eqclasses = discoverEquivalenceClasses(subcuspt)
 
             v.High.println(eqclasses.joinToString("\n"))
 
@@ -248,10 +248,16 @@ object Options {
         description = "Disable topological decompositioning"
     ).default(false)
 
-    val noEquivalenceClasses by argParser.option(
+    val noInitialFinalEquivalenceClasses by argParser.option(
         ArgType.Boolean,
         shortName = "E",
-        description = "Disable equivalence classes"
+        description = "Disable initial/final equivalence classes"
+    ).default(false)
+
+    val noChainEquivalenceClasses by argParser.option(
+        ArgType.Boolean,
+        shortName = "C",
+        description = "Disable chain equivalence classes"
     ).default(false)
 
     val maxSwicthesInBatch by argParser.option(
@@ -264,7 +270,7 @@ object Options {
     val outputVerifyPN by argParser.option(ArgType.Boolean, shortName = "P", description = "output the output from verifypn").default(false)
 }
 
-const val version = "1.4"
+const val version = "1.6"
 
 fun main(args: Array<String>) {
     println("Version: $version \n ${args.joinToString(" ")}")

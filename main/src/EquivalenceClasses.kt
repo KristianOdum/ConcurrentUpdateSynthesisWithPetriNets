@@ -7,10 +7,13 @@ data class EquivalenceClass(val switches: Set<Switch>, val batchOrder: BatchOrde
 
 
 fun discoverEquivalenceClasses(cuspt: CUSPT): Set<EquivalenceClass> {
-    val i = onlyInInitial(cuspt)
-    val f = onlyInFinal(cuspt)
+    val i = if (Options.noInitialFinalEquivalenceClasses) EquivalenceClass(setOf(), BatchOrder.UNKNOWN)
+            else onlyInInitial(cuspt)
 
-    val cs = chainEQC(cuspt)
+    val f = if (Options.noInitialFinalEquivalenceClasses) EquivalenceClass(setOf(), BatchOrder.UNKNOWN)
+            else onlyInFinal(cuspt)
+
+    val cs = if (Options.noChainEquivalenceClasses) setOf() else chainEQC(cuspt)
 
     // If switch is both in (i or f) and cs then prefer i or f
     return (cs.map { EquivalenceClass(it.switches - (i.switches + f.switches), it.batchOrder) }.toSet() + i + f)

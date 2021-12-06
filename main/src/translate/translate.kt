@@ -45,7 +45,7 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
     // Create places. Everyone has a placekeeper place and a yet-to-be-visited place,
     for (s: Int in cuspt.allSwitches) {
         val p = Place(0, "${topologyPrefix}_P_$s")
-        val pUnvisited = Place(2, "${topologyPrefix}_UV_$s")
+        val pUnvisited = Place(1, "${topologyPrefix}_UV_$s")
 
         switchToTopologyPlaceMap[s] = p
         switchToTopologyUnvisitedPlaceMap[s] = pUnvisited
@@ -66,9 +66,8 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
             arcs.add(Arc(place, t, 1))
 
             // Add arc from unvisitedplace to transition
-            val uPlace: Place? = switchToTopologyUnvisitedPlaceMap[nextHop]
-            assert(uPlace != null)
-            arcs.add(Arc(uPlace!!, t, 1))
+            val uPlace = switchToTopologyUnvisitedPlaceMap[source]!!
+            arcs.add(Arc(uPlace, t, 1))
 
             // Add arc from transition to nextHop node
             val tPlace: Place? = switchToTopologyPlaceMap[nextHop]
@@ -127,7 +126,6 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
     transitions.add(tInject)
     arcs.add(Arc(pUpdating, tInject, 1))
     arcs.add(Arc(tInject, switchToTopologyPlaceMap[cuspt.ingressSwitch]!!, 1))
-    arcs.add(Arc(switchToTopologyUnvisitedPlaceMap[cuspt.ingressSwitch]!!, tInject, 1))
 
     // DFA
     // First we translate the DFA into a Petri Game
@@ -216,8 +214,9 @@ private fun createSwitchComponent(eqc: EquivalenceClass, cuspt: CUSPT, edgeToTop
     }
 
     for (s_i in eqc.switches) {
-        val initialNextHops = cuspt.initialRouting[s_i] ?: setOf()
-        val finalNextHops = cuspt.finalRouting[s_i] ?: setOf()
+        // Do not create arcs for transitions that are both in initial and final
+        val initialNextHops = cuspt.initialRouting[s_i]!! - cuspt.finalRouting[s_i]!!
+        val finalNextHops = cuspt.finalRouting[s_i]!! - cuspt.initialRouting[s_i]!!
 
         for (nextHop in initialNextHops) {
             arcs.add(Arc(pInit, edgeToTopologyTransitionMap[s_i edge nextHop]!!))
