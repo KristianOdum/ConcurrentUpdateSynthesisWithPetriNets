@@ -10,21 +10,20 @@ fun main(args: Array<String>) {
         addRandomWaypointsToNetworks(7, Path.of("""artefact/data/zoo_json"""), 0)
         return
     }
-    val filter = "zoo_json"
+    val filter = "zoo_json/"
 
-    val ours = handleResultsOurs(Path.of("../output/all")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
-    val ours_chain= handleResultsOurs(Path.of("../output/td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
-    val ours_if = handleResultsOurs(Path.of("../output/")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
-    val ours_td = handleResultsOurs(Path.of("../output/")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
-    val ours_none = handleResultsOurs(Path.of("../output/")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours = handleResultsOurs(Path.of("../output/ours")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    //val ours_chain= handleResultsOurs(Path.of("../output/td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_if = handleResultsOurs(Path.of("../output/if")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_td = handleResultsOurs(Path.of("../output/td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_nochain = handleResultsOurs(Path.of("../output/nochain")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    val ours_none = handleResultsOurs(Path.of("../output/none")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
 
 
     val flips = handleResultsFlip(Path.of("../output/flip")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
-    val parakeet = handleResultsParakeet(Path.of("../output/parakeet")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
+    //val parakeet = handleResultsParakeet(Path.of("../output/parakeet")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
 
     val combined = ours.filter { it.key in flips }.map { (k, v) -> k to mapOf("ours" to v, "flip" to flips[k]!!) }.toMap()
-    val oursCombined = ours.filter { it.key in ours }
-        .map { (k,v) -> k to mapOf("ours" to v, "ours_chain" to ours_chain[k]!!, "ours_if" to ours_if[k]!!, "ours_td" to ours_td[k]!!, "ours_none" to ours_none[k]!!) }.toMap()
 
     val solved = combined.filterValues { it["ours"]!![Measure.Batches] != null && it["flip"]!![Measure.Batches] != null }
 
@@ -41,6 +40,14 @@ fun main(args: Array<String>) {
 
     println()
     println(cactusPlotTimeString(combined))
+
+    val oursCombined = ours.filter { it.key in ours }
+        .map { (k,v) -> k to mapOf("ours" to v, "ours_if" to ours_if[k]!!, "ours_td" to ours_td[k]!!, "ours_none" to ours_none[k]!!) }.toMap()
+    val chaincomp = ours.filter { it.key in ours }
+        .map { (k,v) -> k to mapOf("ours" to v, "ours_nochain" to ours_nochain[k]!!) }.toMap()
+
+    println()
+    println(chaincomp.filter { it.value["ours"]!![Measure.Batches] != it.value["ours_nochain"]!![Measure.Batches] })
 
     println()
     println(cactusPlotTimeString(oursCombined))
