@@ -24,6 +24,9 @@ fun generateDFAFromUSMProperties(usm: UpdateSynthesisModel): DFA<Switch> {
 fun genCombinedWaypointDFA(usm: UpdateSynthesisModel): DFA<Switch> {
     val waypoints = waypointDFAs(usm)
 
+    if(Options.noTopologicalNFAReduction)
+        return waypoints.reduce { acc, it -> acc intersect it }
+
     if (waypoints.size > 1) {
         val pseudoCUSP = generateCUSPTFromCUSP(generateCUSPFromUSM(usm, dfaOf(usm.switches) { it.state(initial = true) }))
         val pto = partialTopologicalOrder(pseudoCUSP)

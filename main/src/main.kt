@@ -260,6 +260,12 @@ object Options {
         description = "Disable chain equivalence classes"
     ).default(false)
 
+    val noTopologicalNFAReduction by argParser.option(
+        ArgType.Boolean,
+        shortName = "R",
+        description = "Disable topological NFA reduction"
+    ).default(false)
+
     val maxSwicthesInBatch by argParser.option(
         ArgType.Int,
         shortName = "m",
