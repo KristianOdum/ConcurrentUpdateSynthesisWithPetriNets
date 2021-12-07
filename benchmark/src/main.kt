@@ -10,7 +10,7 @@ fun main(args: Array<String>) {
         addRandomWaypointsToNetworks(7, Path.of("""artefact/data/zoo_json"""), 0)
         return
     }
-    val filter = "zoo_json_plus1"
+    val filter = "zoo_json/"
 
     val ours = handleResultsOurs(Path.of("../output/ours")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }
     //val ours_chain= handleResultsOurs(Path.of("../output/td")).map { it.path.pathString to it.fields }.toMap().filter { it.key.contains(filter) }

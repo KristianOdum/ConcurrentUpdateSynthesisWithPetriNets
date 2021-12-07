@@ -22,7 +22,15 @@
     <packaging>jar</packaging>
     <name>Main</name>
     <build>
+        <sourceDirectory>src</sourceDirectory>
         <finalName>main</finalName>
+        <resources>
+            <resource>
+                <directory>
+                    resources
+                </directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>

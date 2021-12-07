@@ -6,3 +6,4 @@ fun cactusPlotTime(d: Map<String, Map<String, Map<Measure, Any>>>) =
     d.entries.first().value.keys.map { m ->
         m to d.values.map { it[m]!![Measure.TotalTime] }.filterNotNull().map { it as Double }.sorted()
     }.toMap()
+
