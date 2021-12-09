@@ -47,10 +47,10 @@ fun topologicalDecomposition(cuspt: CUSPT): List<CUSPT> {
     val subCusps = subproblems.map { sp ->
         val dfa = dfaOf<Switch>(sp.switches) { d ->
             val initialSwitchState = posDFAState[sp.initSwitch]!!.single()
-            val finalSwitchState = posDFAState[sp.finalSwitch]!!.single()
+            val finalSwitchState = if (sp.finalSwitch == -2) posDFAState[sp.finalSwitch]!! else setOf(posDFAState[sp.finalSwitch]!!.single())
 
             val oldToNewState = cuspt.policy.states.associateWith {
-                d.state(initial = it == initialSwitchState, final = it == finalSwitchState)
+                d.state(initial = it == initialSwitchState, final = it in finalSwitchState)
             }
 
             cuspt.policy.delta.forEach { (from, outgoing) ->
