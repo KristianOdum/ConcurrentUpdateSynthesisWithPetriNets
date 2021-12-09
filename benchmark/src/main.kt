@@ -5,9 +5,14 @@ data class OursFlip(val ours: Map<Measure, Any>, val flips: Map<Measure, Any>)
 data class OursFlipWithNull(val ours: Map<Measure, Any>?, val flips: Map<Measure, Any>?)
 
 fun main(args: Array<String>) {
-    val createNewZoo = false
-    if (createNewZoo) {
+    val createNewZooWithMoreWaypoint = false
+    if (createNewZooWithMoreWaypoint) {
         addRandomWaypointsToNetworks(7, Path.of("""artefact/data/zoo_json"""), 0)
+        return
+    }
+    val createNewZooWithConditionalEnforcement = true
+    if (createNewZooWithConditionalEnforcement) {
+        addConditionalEnforcementToNetworks( Path.of("""artefact/data/zoo_json"""), 0)
         return
     }
     val filter = "zoo_json/"

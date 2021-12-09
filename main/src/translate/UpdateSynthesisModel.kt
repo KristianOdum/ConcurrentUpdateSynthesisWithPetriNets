@@ -16,6 +16,7 @@ data class UpdateSynthesisModel(
     // routing properties
     val reachability: Reachability = _properties.reachability
     val waypoint: Waypoint = _properties.waypoint
+    val conditionalEnforcement: ConditionalEnforcement? = _properties.conditionalEnforcement
 
     // we never consider loop-freedom since we always have reachability, which preserves loop-freedom
     val loopFreedom: LoopFreedom = _properties.loopFreedom
@@ -60,6 +61,7 @@ data class UpdateSynthesisModel(
     @Serializable
     open class Properties (
         @SerialName("Waypoint")     val waypoint: Waypoint,
+        @SerialName("ConditionalEnforcement") val conditionalEnforcement: ConditionalEnforcement? = null,
         @SerialName("LoopFreedom")  val loopFreedom: LoopFreedom,
         @SerialName("Reachability") val reachability: Reachability
     )
@@ -69,6 +71,12 @@ data class UpdateSynthesisModel(
         @SerialName("startNode")    val initialNode: Int,
         @SerialName("finalNode")    val finalNode: Int,
         @SerialName("waypoint")     val waypoints: List<Int>)
+
+    @Serializable
+    class ConditionalEnforcement(
+        @SerialName("s") val s: Int,
+        @SerialName("sPrime") val sPrime: Int,
+    )
 
     @Serializable
     class LoopFreedom(

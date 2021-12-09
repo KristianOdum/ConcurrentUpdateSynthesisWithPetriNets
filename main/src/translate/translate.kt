@@ -168,9 +168,9 @@ fun generatePetriGameFromCUSPT(cuspt: CUSPT, eqclasses: Set<EquivalenceClass>): 
 
     // Generate the query
     val queryPath = kotlin.io.path.createTempFile("query")
-    val DFAFinalStatePlace = dfaStateToPlaceMap[cuspt.policy.finals.single()]!!
+    val DFAFinalStatePlaces = cuspt.policy.finals.map { dfaStateToPlaceMap[it]!! }
 
-    queryPath.toFile().writeText(generateQuery(DFAFinalStatePlace))
+    queryPath.toFile().writeText(generateQuery(DFAFinalStatePlaces))
 
     return PetriGameQueryPath(PetriGame(places, transitions, arcs), queryPath, numSwitchComponents)
 }
@@ -365,5 +365,7 @@ fun generatePnmlFileFromPetriGame(petriGame: PetriGame): String {
     return res
 }
 
-fun generateQuery(finalDFAState: Place) =
-        "EF (UPDATE_P_BATCHES <= 0 and ${finalDFAState.name} = 1)"
+fun generateQuery(finalDFAState: List<Place>) =
+        "EF (UPDATE_P_BATCHES <= 0 and (" +
+                finalDFAState.joinToString(" or ") { "${it.name} == 1" } +
+        "))"

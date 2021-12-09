@@ -10,6 +10,10 @@ fun outputPrettyNetwork(usm: UpdateSynthesisModel): Renderer {
         usm.reachability.initialNode.toString().get().attrs().add("shape","hexagon")
         usm.reachability.finalNode.toString().get().attrs().add("shape","doublecircle")
         usm.waypoint.waypoints.forEach { it.toString().get().attrs().add("shape", "house") }
+        if (usm.conditionalEnforcement != null) {
+            usm.conditionalEnforcement.s.toString().get().attrs().add("shape", "invtriangle")
+            usm.conditionalEnforcement.sPrime.toString().get().attrs().add("shape", "triangle")
+        }
 
         for ((from, to) in usm.initialRouting) {
             (from.toString() - to.toString()).attrs().add("color","blue")

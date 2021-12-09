@@ -16,8 +16,11 @@ fun generateDFAFromUSMProperties(usm: UpdateSynthesisModel): DFA<Switch> {
     val combinedWaypointNFA = genCombinedWaypointDFA(usm)
     if (Options.drawGraphs) combinedWaypointNFA.toGraphviz().toFile(File("main/graphics_out/waypointdfa.svg"))
 
+    val conditionalEnforcementNFA = genConditionalEnforcementDFA(usm)
+    if (Options.drawGraphs) conditionalEnforcementNFA.toGraphviz().toFile(File("main/graphics_out/condEnf.svg"))
+
     // Intersect the reachability NFA with the waypoints
-    val res = combinedWaypointNFA intersect reachabilityNFA
+    val res = combinedWaypointNFA intersect reachabilityNFA intersect conditionalEnforcementNFA
     return res
 }
 
@@ -36,6 +39,20 @@ fun genCombinedWaypointDFA(usm: UpdateSynthesisModel): DFA<Switch> {
         return waypoints.reduce { acc, it -> acc intersect it }
     }
 }
+
+fun genConditionalEnforcementDFA(usm: UpdateSynthesisModel) =
+    dfaOf(usm.switches) { d ->
+        val sI = d.state(initial = true, final = true)
+        if (usm.conditionalEnforcement == null)
+            return@dfaOf
+        val ss = d.state()
+        val sF = d.state(final = true)
+
+        sI.edgeTo(ss, usm.conditionalEnforcement.s)
+        ss.edgeTo(sF, usm.conditionalEnforcement.sPrime)
+        ss.edgeTo(sF, usm.conditionalEnforcement.sPrime)
+        sI.edgeTo(sF, usm.conditionalEnforcement.sPrime)
+    }
 
 fun genReachabilityDFA(usm: UpdateSynthesisModel): DFA<Switch> =
     dfaOf<Switch>(usm.switches) { d ->
