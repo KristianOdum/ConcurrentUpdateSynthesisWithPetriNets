@@ -51,11 +51,54 @@ fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: Path, rand
     }
 }
 
+fun addConditionalEnforcementToNetworks(pathToFolder: Path, randomSeed: Int) {
+    val random = Random(randomSeed)
+    val dir = pathToFolder.toFile()
+    assert(dir.isDirectory)
+    val newDir = Path.of(pathToFolder.pathString + "_cond_enf").toFile()
+    if (!newDir.exists())
+        newDir.mkdir()
+
+
+    files@for (file in dir.walk().iterator()) {
+        if (file.isDirectory)
+            continue
+        val usm = updateSynthesisModelFromJsonText(file.readText())
+
+        val candidateSwitches = usm.initialRouting.filter { i_it -> usm.finalRouting.map { it.source }.contains(i_it.source) }.map { it.source }.toMutableList()
+
+        val s = candidateSwitches[random.nextInt(candidateSwitches.size)]
+        candidateSwitches -= s
+        val sPrime = candidateSwitches[random.nextInt(candidateSwitches.size)]
+
+        val newUsm = usm.addConditionalEnforcement(s, sPrime)
+
+        val jElem = Json.encodeToJsonElement(newUsm)
+
+        val newPath = newDir.absolutePath + File.separator + file.name
+        val newFile = File(newPath)
+        if (!newFile.exists())
+            newFile.createNewFile()
+        newFile.writeText(jElem.toString())
+
+        println("Added conditional enforcement to ${file.name}")
+    }
+}
+
 fun UpdateSynthesisModel.addWaypoints(waypoints: List<Int>): UpdateSynthesisModel {
     val initRouting = this.initialRouting.map { listOf(it.source, it.target) }.toSet()
     val finalRouting = this.finalRouting.map { listOf(it.source, it.target) }.toSet()
     val newWaypoint = UpdateSynthesisModel.Waypoint(this.reachability.initialNode, this.reachability.finalNode, this.waypoint.waypoints + waypoints)
-    val properties = UpdateSynthesisModel.Properties(newWaypoint, this.loopFreedom, this.reachability)
+    val properties = UpdateSynthesisModel.Properties(newWaypoint, this.conditionalEnforcement, this.loopFreedom, this.reachability)
+
+    return UpdateSynthesisModel(initRouting, finalRouting, properties)
+}
+
+fun UpdateSynthesisModel.addConditionalEnforcement(s: Int, sPrime: Int): UpdateSynthesisModel {
+    val initRouting = this.initialRouting.map { listOf(it.source, it.target) }.toSet()
+    val finalRouting = this.finalRouting.map { listOf(it.source, it.target) }.toSet()
+    val condEnf = UpdateSynthesisModel.ConditionalEnforcement(s, sPrime)
+    val properties = UpdateSynthesisModel.Properties(waypoint, condEnf, loopFreedom, reachability)
 
     return UpdateSynthesisModel(initRouting, finalRouting, properties)
 }
