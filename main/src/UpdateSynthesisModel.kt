@@ -1,9 +1,7 @@
-package translate
-
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Serializable
+@Serializable()
 data class UpdateSynthesisModel(
     @SerialName("Initial_routing")  private val _initRouting: Set<List<Int>>,
     @SerialName("Final_routing")    private val _finalRouting: Set<List<Int>>,

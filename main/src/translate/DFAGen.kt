@@ -1,8 +1,8 @@
 package translate
 
-import CUSPT
 import SCC
 import Switch
+import UpdateSynthesisModel
 import generateCUSPFromUSM
 import generateCUSPTFromCUSP
 import partialTopologicalOrder

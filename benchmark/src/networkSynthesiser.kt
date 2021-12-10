@@ -1,11 +1,8 @@
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
-import translate.UpdateSynthesisModel
 import translate.updateSynthesisModelFromJsonText
-import java.awt.font.FontRenderContext
 import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.div
 import kotlin.io.path.pathString
 import kotlin.random.Random
 
@@ -20,7 +17,7 @@ fun addRandomWaypointsToNetworks(numMoreWaypoints: Int, pathToFolder: Path, rand
     files@for (file in dir.walk().iterator()) {
         if (file.isDirectory)
             continue
-        val usm = updateSynthesisModelFromJsonText(file.readText())
+        val usm: UpdateSynthesisModel = updateSynthesisModelFromJsonText(file.readText())
 
         val candidateSwitches = usm.initialRouting.filter { i_it -> usm.finalRouting.map { it.source }.contains(i_it.source) }.map { it.source }.toMutableList()
         candidateSwitches -= usm.waypoint.waypoints
@@ -59,19 +56,23 @@ fun addConditionalEnforcementToNetworks(pathToFolder: Path, randomSeed: Int) {
     if (!newDir.exists())
         newDir.mkdir()
 
-
     files@for (file in dir.walk().iterator()) {
         if (file.isDirectory)
             continue
-        val usm = updateSynthesisModelFromJsonText(file.readText())
+        val usm: UpdateSynthesisModel = updateSynthesisModelFromJsonText(file.readText())
 
-        val candidateSwitches = usm.initialRouting.filter { i_it -> usm.finalRouting.map { it.source }.contains(i_it.source) }.map { it.source }.toMutableList()
+        val candidateSwitches = usm.switches.toMutableList()
 
         val s = candidateSwitches[random.nextInt(candidateSwitches.size)]
         candidateSwitches -= s
+
+        if (s in usm.initialRouting.map { it.source })
+            candidateSwitches.filter { it in usm.initialRouting.map { it.source } }
+        else if (s in usm.finalRouting.map { it.source })
+            candidateSwitches.filter { it in usm.finalRouting.map {it.source} }
         val sPrime = candidateSwitches[random.nextInt(candidateSwitches.size)]
 
-        val newUsm = usm.addConditionalEnforcement(s, sPrime)
+        val newUsm: UpdateSynthesisModel = usm.addConditionalEnforcement(s, sPrime)
 
         val jElem = Json.encodeToJsonElement(newUsm)
 

@@ -7,6 +7,7 @@ import EquivalenceClass
 import Place
 import Switch
 import Transition
+import UpdateSynthesisModel
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.redundent.kotlin.xml.*
