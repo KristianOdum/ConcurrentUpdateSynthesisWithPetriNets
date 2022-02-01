@@ -45,13 +45,15 @@ fun genConditionalEnforcementDFA(usm: UpdateSynthesisModel) =
         val sI = d.state(initial = true, final = true)
         if (usm.conditionalEnforcement == null)
             return@dfaOf
-        val ss = d.state()
+
+        val sMet = d.state()
+        val sPrimeMet = d.state(final = true)
         val sF = d.state(final = true)
 
-        sI.edgeTo(ss, usm.conditionalEnforcement.s)
-        ss.edgeTo(sF, usm.conditionalEnforcement.sPrime)
-        ss.edgeTo(sF, usm.conditionalEnforcement.sPrime)
-        sI.edgeTo(sF, usm.conditionalEnforcement.sPrime)
+        sI.edgeTo(sPrimeMet, usm.conditionalEnforcement.sPrime)
+        sPrimeMet.edgeToDead(usm.conditionalEnforcement.s)
+        sI.edgeTo(sMet, usm.conditionalEnforcement.s)
+        sMet.edgeTo(sF, usm.conditionalEnforcement.sPrime)
     }
 
 fun genReachabilityDFA(usm: UpdateSynthesisModel): DFA<Switch> =
